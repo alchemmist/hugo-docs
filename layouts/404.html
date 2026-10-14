@@ -1,0 +1,3 @@
+{{ define "main" }}
+<article class="document error-page"><h1 id="page-title">{{ T "notFound" }}</h1><p>{{ T "notFoundText" }}</p><p><a href="{{ .Site.Home.RelPermalink }}">{{ T "backToOverview" }}</a> {{ T "or" }} <button type="button" class="text-button" data-open-search>{{ T "findPageInline" }}</button>.</p></article>
+{{ end }}

@@ -1,0 +1,113 @@
+[skipContent]
+other = "Перейти к содержанию"
+
+[search]
+other = "Поиск"
+
+[openNavigation]
+other = "Открыть навигацию"
+
+[closeNavigation]
+other = "Закрыть навигацию"
+
+[navigation]
+other = "Навигация по документации"
+
+[findPage]
+other = "Найти страницу"
+
+[sections]
+other = "Разделы"
+
+[overview]
+other = "Обзор"
+
+[outline]
+other = "Оглавление страницы"
+
+[searchTitle]
+other = "Поиск по документации"
+
+[closeSearch]
+other = "Закрыть поиск"
+
+[searchPlaceholder]
+other = "Что ищем?"
+
+[searchQuery]
+other = "Поисковый запрос"
+
+[searchHint]
+other = "Введите название или фразу из текста."
+
+[searchResults]
+other = "Результаты поиска"
+
+[retry]
+other = "Повторить поиск"
+
+[select]
+other = "выбрать"
+
+[open]
+other = "открыть"
+
+[close]
+other = "закрыть"
+
+[breadcrumbs]
+other = "Путь к странице"
+
+[documentation]
+other = "Документация"
+
+[onThisPage]
+other = "На этой странице"
+
+[neighbors]
+other = "Соседние страницы"
+
+[previous]
+other = "Предыдущая"
+
+[next]
+other = "Далее"
+
+[notFound]
+other = "Страница не найдена"
+
+[notFoundText]
+other = "Возможно, её переместили или ссылка содержит опечатку."
+
+[backToOverview]
+other = "Вернуться к обзору"
+
+[or]
+other = "или"
+
+[findPageInline]
+other = "найти страницу"
+
+[collapseFolder]
+other = "Свернуть раздел"
+
+[expandFolder]
+other = "Раскрыть раздел"
+
+[searchLoading]
+other = "Ищем страницы…"
+
+[searchCount]
+other = "Найдено страниц: {count}"
+
+[searchLimit]
+other = ". Показаны первые 15."
+
+[searchEmpty]
+other = "Ничего не нашлось. Попробуйте другое слово или более короткий запрос."
+
+[searchSuggestions]
+other = "Можно начать с этих страниц или ввести запрос."
+
+[searchError]
+other = "Не удалось загрузить поиск. Проверьте подключение и попробуйте ещё раз."

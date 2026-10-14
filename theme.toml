@@ -1,0 +1,12 @@
+name = 'Alchemmist Docs'
+license = 'MIT'
+licenselink = 'https://github.com/alchemmist/hugo-docs/blob/main/LICENSE'
+description = 'Minimal documentation with folder navigation, local search, and Computer Modern typography.'
+homepage = 'https://github.com/alchemmist/hugo-docs'
+tags = ['documentation', 'minimal', 'responsive', 'search']
+features = ['folder navigation', 'local search', 'mermaid', 'math', 'responsive', 'i18n']
+min_version = '0.167.0'
+
+[author]
+name = 'Anton Grishin'
+homepage = 'https://alchemmist.xyz'

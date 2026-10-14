@@ -1,0 +1,2 @@
+User-agent: *
+{{ if .Site.Params.docs.noindex }}Disallow: /{{ else }}Allow: /{{ end }}

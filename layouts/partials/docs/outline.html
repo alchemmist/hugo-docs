@@ -1,0 +1,4 @@
+{{- if gt (len .Fragments.Identifiers) 0 -}}
+  <div class="outline-title">{{ T "onThisPage" }}</div>
+  {{ .TableOfContents }}
+{{- end -}}

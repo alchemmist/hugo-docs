@@ -1,0 +1,17 @@
+{{- if not .IsHome -}}
+  <nav class="breadcrumbs" aria-label="{{ T "breadcrumbs" }}">
+    {{- range .Ancestors.Reverse -}}
+      {{ if .IsHome }}<a href="{{ .RelPermalink }}">{{ T "documentation" }}</a>{{ else }}<span>{{ .LinkTitle }}</span>{{ end }}{{ partial "docs/icon.html" "chevron" }}
+    {{- end -}}
+    <span aria-current="page">{{ .LinkTitle }}</span>
+  </nav>
+{{- end -}}
+<article class="document" data-pagefind-body>
+  <header class="page-heading"><h1 id="page-title">{{ .Title }}</h1>{{ with .Description }}<p class="page-description">{{ . }}</p>{{ end }}</header>
+  {{- if gt (len .Fragments.Identifiers) 0 -}}
+    <details class="mobile-outline"><summary>{{ T "onThisPage" }} {{ partial "docs/icon.html" "chevron" }}</summary>{{ replace .TableOfContents `id="TableOfContents"` `id="mobile-outline-nav"` | safeHTML }}</details>
+  {{- end -}}
+  {{ partial "content/body.html" . }}
+</article>
+{{ partial "docs/pager.html" . }}
+{{ with .Site.Params.docs.footer }}<footer class="document-footer"><span>{{ . }}</span></footer>{{ end }}

@@ -1,0 +1,23 @@
+{{- $current := .current -}}
+{{- $depth := .depth -}}
+<ul class="nav-level{{ if eq $depth 0 }} nav-root{{ end }}">
+  {{- range .pages.ByWeight -}}
+    {{- $active := eq .Path $current.Path -}}
+    {{- $branch := or $active (.IsAncestor $current) -}}
+    {{- $id := printf "section-%s" (md5 .Path) -}}
+    <li class="nav-item{{ if .IsSection }} nav-section{{ end }}"{{ if $branch }} data-current-branch{{ end }}>
+      <div class="nav-row">
+        {{- if .IsSection -}}
+          <button class="tree-toggle" type="button" aria-controls="{{ $id }}" aria-expanded="{{ if $branch }}true{{ else }}false{{ end }}" aria-label="{{ if $branch }}{{ T "collapseFolder" }}{{ else }}{{ T "expandFolder" }}{{ end }} {{ .LinkTitle }}" data-section="{{ .Path }}" data-title="{{ .LinkTitle }}">{{ partial "docs/icon.html" "chevron" }}<span>{{ .LinkTitle }}</span></button>
+        {{- else -}}
+        <a href="{{ .RelPermalink }}"{{ if $active }} aria-current="page"{{ end }}>{{ .LinkTitle }}</a>
+        {{- end -}}
+      </div>
+      {{- if .IsSection -}}
+        <div id="{{ $id }}"{{ if not $branch }} hidden{{ end }}>
+          {{ partial "docs/tree.html" (dict "pages" .Pages "current" $current "depth" (add $depth 1)) }}
+        </div>
+      {{- end -}}
+    </li>
+  {{- end -}}
+</ul>

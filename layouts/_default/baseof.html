@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="{{ .Site.Language.Lang }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {{ if .Site.Params.docs.noindex }}<meta name="robots" content="noindex, nofollow" />{{ end }}
+    <meta name="description" content="{{ .Description }}" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>{{ .Title }} · {{ .Site.Title }}</title>
+    {{ with .Site.Params.docs.logo }}<link rel="icon" href="{{ . | relURL }}" />{{ end }}
+    {{ partial "content/head.html" . }}
+    {{ $style := resources.Get "docs.css" | minify | fingerprint }}
+    <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}" />
+    {{ $script := resources.Get "docs.js" | minify | fingerprint }}
+    <script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}" defer></script>
+    {{ partial "docs/head-extra.html" . }}
+  </head>
+  <body data-site-key="{{ .Site.Home.RelPermalink }}" data-ui="{{ partial "docs/ui.html" . | jsonify }}" data-search-index="{{ with .Site.Home.OutputFormats.Get "SearchIndex" }}{{ .RelPermalink }}{{ end }}">
+    <a class="skip-link" href="#main">{{ T "skipContent" }}</a>
+    <header class="mobile-header">
+      <a class="mobile-brand" href="{{ .Site.Home.RelPermalink }}">{{ partial "docs/brand.html" (dict "page" . "size" 25) }}</a>
+      <div class="mobile-actions">
+        <button type="button" class="icon-button" data-open-search aria-label="{{ T "search" }}">{{ partial "docs/icon.html" "search" }}</button>
+        <button type="button" class="icon-button" id="menu-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="{{ T "openNavigation" }}">{{ partial "docs/icon.html" "menu" }}</button>
+      </div>
+    </header>
+    <button type="button" class="nav-backdrop" aria-label="{{ T "closeNavigation" }}" tabindex="-1" hidden></button>
+    <div class="docs-layout">
+      <aside class="sidebar" id="sidebar" aria-label="{{ T "navigation" }}">
+        <a class="brand" href="{{ .Site.Home.RelPermalink }}">{{ partial "docs/brand.html" (dict "page" . "size" 30) }}</a>
+        <button class="search-trigger" type="button" data-open-search>{{ partial "docs/icon.html" "search" }}<span>{{ T "findPage" }}</span><kbd>⌘ K</kbd></button>
+        <nav class="page-tree" aria-label="{{ T "sections" }}">
+          <a class="home-link" href="{{ .Site.Home.RelPermalink }}"{{ if .IsHome }} aria-current="page"{{ end }}>{{ T "overview" }}</a>
+          {{ partial "docs/tree.html" (dict "pages" .Site.Home.Pages "current" . "depth" 0) }}
+        </nav>
+      </aside>
+      <main id="main" tabindex="-1">
+        {{ block "main" . }}{{ end }}
+      </main>
+      <aside class="page-outline" aria-label="{{ T "outline" }}">
+        {{ partial "docs/outline.html" . }}
+      </aside>
+    </div>
+    <dialog id="search-dialog" aria-labelledby="search-title">
+      <div class="search-panel">
+        <div class="search-head"><h2 id="search-title">{{ T "searchTitle" }}</h2><button class="icon-button" type="button" data-close-search aria-label="{{ T "closeSearch" }}">{{ partial "docs/icon.html" "close" }}</button></div>
+        <label class="search-field">{{ partial "docs/icon.html" "search" }}<input id="search-input" type="search" placeholder="{{ T "searchPlaceholder" }}" autocomplete="off" spellcheck="false" role="combobox" aria-label="{{ T "searchQuery" }}" aria-autocomplete="list" aria-expanded="false" aria-controls="search-results" /></label>
+        <p id="search-status" role="status" aria-live="polite">{{ T "searchHint" }}</p>
+        <ul id="search-results" role="listbox" aria-label="{{ T "searchResults" }}"></ul>
+        <button id="search-retry" type="button" hidden>{{ T "retry" }}</button>
+        <div class="search-help"><span><kbd>↑</kbd> <kbd>↓</kbd> {{ T "select" }} <kbd>↵</kbd> {{ T "open" }}</span><span><kbd>esc</kbd> {{ T "close" }}</span></div>
+      </div>
+    </dialog>
+    {{ partial "content/scripts.html" . }}
+    {{ partial "docs/body-extra.html" . }}
+  </body>
+</html>

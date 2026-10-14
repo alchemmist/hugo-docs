@@ -1,0 +1,11 @@
+.git
+.gitignore
+.dockerignore
+public
+resources
+tmp
+.DS_Store
+node_modules
+vendor
+build
+junk

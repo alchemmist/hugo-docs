@@ -1,0 +1,113 @@
+[skipContent]
+other = "Skip to content"
+
+[search]
+other = "Search"
+
+[openNavigation]
+other = "Open navigation"
+
+[closeNavigation]
+other = "Close navigation"
+
+[navigation]
+other = "Documentation navigation"
+
+[findPage]
+other = "Find a page"
+
+[sections]
+other = "Sections"
+
+[overview]
+other = "Overview"
+
+[outline]
+other = "Page outline"
+
+[searchTitle]
+other = "Search documentation"
+
+[closeSearch]
+other = "Close search"
+
+[searchPlaceholder]
+other = "What are you looking for?"
+
+[searchQuery]
+other = "Search query"
+
+[searchHint]
+other = "Enter a title or phrase."
+
+[searchResults]
+other = "Search results"
+
+[retry]
+other = "Retry search"
+
+[select]
+other = "select"
+
+[open]
+other = "open"
+
+[close]
+other = "close"
+
+[breadcrumbs]
+other = "Breadcrumbs"
+
+[documentation]
+other = "Documentation"
+
+[onThisPage]
+other = "On this page"
+
+[neighbors]
+other = "Adjacent pages"
+
+[previous]
+other = "Previous"
+
+[next]
+other = "Next"
+
+[notFound]
+other = "Page not found"
+
+[notFoundText]
+other = "It may have moved, or the link may contain a typo."
+
+[backToOverview]
+other = "Return to overview"
+
+[or]
+other = "or"
+
+[findPageInline]
+other = "find a page"
+
+[collapseFolder]
+other = "Collapse folder"
+
+[expandFolder]
+other = "Expand folder"
+
+[searchLoading]
+other = "Searching…"
+
+[searchCount]
+other = "Pages found: {count}"
+
+[searchLimit]
+other = ". Showing the first 15."
+
+[searchEmpty]
+other = "No results. Try another word or a shorter query."
+
+[searchSuggestions]
+other = "Start with these pages or enter a query."
+
+[searchError]
+other = "Could not load search. Check your connection and try again."

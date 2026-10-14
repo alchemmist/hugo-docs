@@ -1,0 +1,22 @@
+{{- $sequence := partial "docs/sequence.html" .Site.Home -}}
+{{- $current := . -}}
+{{- range $index, $page := $sequence -}}
+  {{- if eq $page.RelPermalink $current.RelPermalink -}}
+    <nav class="page-pager" aria-label="{{ T "neighbors" }}">
+      <div>
+        {{- if gt $index 0 -}}
+          {{- with index $sequence (sub $index 1) -}}
+            <a href="{{ .RelPermalink }}" class="pager-prev"><span>{{ partial "docs/icon.html" "left" }} {{ T "previous" }}</span><strong>{{ .LinkTitle }}</strong></a>
+          {{- end -}}
+        {{- end -}}
+      </div>
+      <div>
+        {{- if lt $index (sub (len $sequence) 1) -}}
+          {{- with index $sequence (add $index 1) -}}
+            <a href="{{ .RelPermalink }}" class="pager-next"><span>{{ T "next" }} {{ partial "docs/icon.html" "right" }}</span><strong>{{ .LinkTitle }}</strong></a>
+          {{- end -}}
+        {{- end -}}
+      </div>
+    </nav>
+  {{- end -}}
+{{- end -}}

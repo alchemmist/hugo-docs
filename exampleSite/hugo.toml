@@ -1,0 +1,13 @@
+_merge = 'deep'
+baseURL = 'http://localhost:1320/'
+title = 'alchemmist docs'
+defaultContentLanguage = 'ru'
+
+[[module.imports]]
+path = 'github.com/alchemmist/hugo-docs'
+
+[params.docs]
+brand = 'alchemmist'
+logo = 'logo.svg'
+footer = 'alchemmist / docs'
+noindex = true

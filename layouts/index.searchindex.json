@@ -1,0 +1,7 @@
+{{- $index := slice -}}
+{{- range where .Site.Pages "Kind" "in" (slice "home" "page") -}}
+  {{- $section := (T "documentation") -}}
+  {{- with .Parent -}}{{- $section = .Title -}}{{- end -}}
+  {{- $index = $index | append (dict "title" .Title "url" .RelPermalink "section" $section "description" .Description "content" (.Plain | htmlUnescape)) -}}
+{{- end -}}
+{{- $index | jsonify -}}

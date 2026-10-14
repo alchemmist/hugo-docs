@@ -44,6 +44,7 @@ def check_site(site, language):
     config.write_text(config.read_text().replace('http://localhost:1320/', 'https://example.test/docs/').replace("logo = ''", "logo = 'custom.svg'").replace("footer = ''", "footer = 'Test footer'").replace('noindex = true', f'noindex = {str(language == "ru").lower()}'))
     module = site / 'go.mod'
     if REVISION:
+        run('go', 'mod', 'edit', '-droprequire=github.com/alchemmist/hugo-docs', cwd=site)
         run('go', 'get', f'github.com/alchemmist/hugo-docs@{REVISION}', cwd=site)
     else:
         module.write_text(module.read_text() + f'\nreplace github.com/alchemmist/hugo-docs => {ROOT}\n')

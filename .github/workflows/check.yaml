@@ -25,6 +25,7 @@ jobs:
       - run: make check
       - name: Check the downloaded module
         env:
+          HUGO_MODULE_PROXY: https://proxy.golang.org
           THEME_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
         run: make check
       - name: Build the example container

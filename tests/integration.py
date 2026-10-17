@@ -46,7 +46,7 @@ def check_site(site, language):
     module = site / 'go.mod'
     if REVISION:
         run('go', 'mod', 'edit', '-droprequire=github.com/alchemmist/hugo-docs', cwd=site)
-        run('go', 'get', f'github.com/alchemmist/hugo-docs@{REVISION}', cwd=site)
+        run('hugo', 'mod', 'get', f'github.com/alchemmist/hugo-docs@{REVISION}', cwd=site)
     else:
         module.write_text(module.read_text() + f'\nreplace github.com/alchemmist/hugo-docs => {ROOT}\n')
     write(site, 'static/custom.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>')

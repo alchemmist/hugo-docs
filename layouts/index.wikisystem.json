@@ -1,0 +1,8 @@
+{{- $pages := dict "_language" .Site.Language.Lang -}}
+{{- range $language := slice "en" "ru" -}}
+{{- range $surface := slice "login" "admin" -}}
+{{- $html := partial "docs/system-page.html" (dict "page" $ "language" $language "surface" $surface) -}}
+{{- $pages = merge $pages (dict (printf "%s.%s.html" $surface $language) $html) -}}
+{{- end -}}
+{{- end -}}
+{{- $pages | jsonify -}}

@@ -60,7 +60,7 @@ spec:
               value: /run/secrets/git/known_hosts
             {{- end }}
           volumeMounts:
-            {{- range $path, $content := .Values.staticFiles }}
+            {{- range $path, $content := merge (deepCopy .Values.staticFiles) .Values.staticBinaryFiles }}
             - name: static
               mountPath: {{ printf "/opt/wiki/static/%s" $path | quote }}
               subPath: {{ $path | quote }}
@@ -106,12 +106,12 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
-        {{- if .Values.staticFiles }}
+        {{- if or .Values.staticFiles .Values.staticBinaryFiles }}
         - name: static
           configMap:
             name: {{ include "wiki.name" . | trunc 56 | trimSuffix "-" }}-static
             items:
-              {{- range $path, $content := .Values.staticFiles }}
+              {{- range $path, $content := merge (deepCopy .Values.staticFiles) .Values.staticBinaryFiles }}
               - key: {{ sha256sum $path }}
                 path: {{ $path | quote }}
               {{- end }}

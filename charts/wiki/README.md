@@ -54,7 +54,7 @@ The runtime supplies the canonical base URL to Hugo. Health checks always use `/
 Package custom assets in a derived image. No public URL or secret is needed at build time:
 
 ```dockerfile
-FROM ghcr.io/alchemmist/hugo-docs-wiki:0.2.2
+FROM ghcr.io/alchemmist/hugo-docs-wiki:0.2.3
 COPY --chown=1000:1000 team-logo.svg /opt/wiki/static/team-logo.svg
 ```
 
@@ -69,4 +69,4 @@ staticFiles:
   images/team.svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/></svg>'
 ```
 
-Set `params.docs.logo = 'images/team.svg'` in `siteConfig`. Each file is mounted separately below `/opt/wiki/static` using a read-only subPath bind. This avoids ConfigMap directory symlinks, which Hugo does not publish; module-provided static assets remain available. Paths must be relative, with no hidden components, `..`, backslashes or empty segments. Values must be UTF-8 text. Keep the total under Kubernetes' 1 MiB ConfigMap limit. Use a custom image for larger/binary assets and compiled plugins. Static asset changes trigger a rollout.
+Set `params.docs.logo = 'images/team.svg'` in `siteConfig`. Each file is mounted separately below `/opt/wiki/static` using a read-only subPath bind. This avoids ConfigMap directory symlinks, which Hugo does not publish; module-provided static assets remain available. Paths must be relative, with no hidden components, `..`, backslashes or empty segments. Values must be UTF-8 text. Keep the total under Kubernetes' 1 MiB ConfigMap limit. Binary assets can use `staticBinaryFiles` with the same safe paths and base64-encoded values; they are projected through ConfigMap `binaryData` with the same per-file mounts. A path cannot appear in both maps. Use a custom image for larger assets and compiled plugins. Static asset changes trigger a rollout.

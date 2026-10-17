@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3
+
+- Replace the account modal with a full `/admin` page and make `/login` use the same site typography and language.
+- Support local custom monospace font families and four WOFF2 faces across navigation, controls and code.
+- Reuse exact fingerprinted asset URLs on account pages while keeping private content protected.
+- Support binary static assets in the Helm chart and preserve password-manager username associations.
+
 ## 0.2.2
 
 - Build browser assets and Hugo templates on the native builder platform. This avoids the ARM64 Node/npm illegal-instruction crash under QEMU that stalled the previous multiarchitecture release.

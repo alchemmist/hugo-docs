@@ -1,0 +1,5 @@
+{{ with .Site.Params.content.typography.monoFamily }}
+{{ $style := resources.Get "typography.css" | resources.ExecuteAsTemplate "wiki-typography.css" $ | minify | fingerprint }}
+<link rel="stylesheet" href="{{ $style.RelPermalink }}">
+{{ with $.Site.Params.content.typography.monoRegular }}<link rel="preload" href="{{ . | relURL }}" as="font" type="font/woff2" crossorigin>{{ end }}
+{{ end }}

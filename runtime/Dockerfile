@@ -16,6 +16,8 @@ COPY i18n ./i18n
 COPY archetypes ./archetypes
 COPY runtime-site ./runtime-site
 COPY --from=frontend /src/assets/wiki-editor.js ./assets/wiki-editor.js
+COPY --from=frontend /src/assets/wiki-admin.js ./assets/wiki-admin.js
+COPY --from=frontend /src/assets/wiki-login.js ./assets/wiki-login.js
 RUN cd runtime-site && hugo mod vendor && hugo --minify --destination /tmp/public
 
 FROM python:3.12-slim

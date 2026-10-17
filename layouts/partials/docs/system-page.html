@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="{{ .language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  {{ with .page.Site.Params.docs.logo }}<link rel="icon" href="{{ . | relURL }}">{{ else }}<link rel="icon" href="data:,">{{ end }}
+  <title>{{ if eq .surface "login" }}{{ if eq .language "ru" }}Вход{{ else }}Sign in{{ end }}{{ else }}{{ if eq .language "ru" }}Аккаунт{{ else }}Account{{ end }}{{ end }} · {{ .page.Site.Title }}</title>
+  {{ partial "content/head.html" .page }}
+  {{ range slice "docs.css" "admin.css" }}
+  {{ $style := resources.Get . | minify | fingerprint }}
+  <link rel="stylesheet" href="{{ $style.RelPermalink }}">
+  {{ end }}
+  {{ partial "docs/typography.html" .page }}
+  {{ $script := resources.Get (printf "wiki-%s.js" .surface) | fingerprint }}
+  <script src="{{ $script.RelPermalink }}" defer></script>
+</head>
+<body>
+  <div class="wiki-system-shell">
+    <header class="wiki-system-header"><a href="__WIKI_BASE_PATH__/">{{ .page.Site.Params.docs.brand | default .page.Site.Title }}</a></header>
+    <main id="wiki-{{ .surface }}" data-base-path="__WIKI_BASE_PATH__/" tabindex="-1"></main>
+  </div>
+</body>
+</html>

@@ -796,7 +796,7 @@ if LIVE_MODE:
 
 from auth import install_auth
 
-AUTH = install_auth(app, origin=ORIGIN, base_path=SETTINGS.base_path, data_dir=SETTINGS.data_dir, public=SETTINGS.public, bootstrap_secret=SETTINGS.bootstrap_secret)
+AUTH = install_auth(app, origin=ORIGIN, base_path=SETTINGS.base_path, data_dir=SETTINGS.data_dir, public=SETTINGS.public, bootstrap_secret=SETTINGS.bootstrap_secret, system_pages_dir=Path(os.getenv('WIKI_SYSTEM_PAGES_DIR', str(SETTINGS.state_dir / 'current' / 'system-pages'))))
 
 
 @app.middleware('http')

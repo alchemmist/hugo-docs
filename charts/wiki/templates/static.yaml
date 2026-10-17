@@ -1,4 +1,4 @@
-{{- if .Values.staticFiles }}
+{{- if or .Values.staticFiles .Values.staticBinaryFiles }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,6 +7,19 @@ data:
   {{- range $path, $content := .Values.staticFiles }}
   {{- if not (regexMatch "^[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*$" $path) }}
   {{- fail (printf "staticFiles contains an unsafe path: %s" $path) }}
+  {{- end }}
+  {{ sha256sum $path }}: {{ $content | quote }}
+  {{- end }}
+binaryData:
+  {{- range $path, $content := .Values.staticBinaryFiles }}
+  {{- if not (regexMatch "^[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*$" $path) }}
+  {{- fail (printf "staticBinaryFiles contains an unsafe path: %s" $path) }}
+  {{- end }}
+  {{- if hasKey $.Values.staticFiles $path }}
+  {{- fail (printf "static asset path is duplicated: %s" $path) }}
+  {{- end }}
+  {{- if ne ($content | b64dec | b64enc) $content }}
+  {{- fail (printf "staticBinaryFiles contains invalid base64: %s" $path) }}
   {{- end }}
   {{ sha256sum $path }}: {{ $content | quote }}
   {{- end }}

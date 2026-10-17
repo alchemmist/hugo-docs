@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild editor/main.js --bundle --minify --format=iife --target=es2022 --outfile=assets/wiki-editor.js",
+    "build": "esbuild editor/main.js --bundle --minify --format=iife --target=es2022 --outfile=assets/wiki-editor.js && esbuild editor/admin.js --bundle --minify --format=iife --target=es2022 --outfile=assets/wiki-admin.js && esbuild editor/login.js --bundle --minify --format=iife --target=es2022 --outfile=assets/wiki-login.js",
     "test": "node --test editor/*.test.js"
   },
   "dependencies": {

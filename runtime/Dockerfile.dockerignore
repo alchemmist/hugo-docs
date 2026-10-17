@@ -1,0 +1,13 @@
+.git
+**/node_modules
+public
+resources
+**/__pycache__
+**/.venv
+.DS_Store
+.env
+*.pem
+*.key
+**/_vendor
+playwright-report
+test-results

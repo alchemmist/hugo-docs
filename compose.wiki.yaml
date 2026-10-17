@@ -1,0 +1,23 @@
+services:
+  wiki:
+    image: ${WIKI_IMAGE:-ghcr.io/alchemmist/hugo-docs-wiki:0.2.0}
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    ports:
+      - "127.0.0.1:${WIKI_PORT:-8080}:8080"
+    environment:
+      PUBLIC_ORIGIN: ${WIKI_URL:-http://localhost:8080}
+      WIKI_PUBLIC: ${WIKI_PUBLIC:-true}
+      WIKI_BOOTSTRAP_SECRET_FILE: /data/bootstrap-token
+    volumes:
+      - wiki-data:/data
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+volumes:
+  wiki-data:

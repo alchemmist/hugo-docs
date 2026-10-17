@@ -111,3 +111,15 @@ other = "Можно начать с этих страниц или ввести 
 
 [searchError]
 other = "Не удалось загрузить поиск. Проверьте подключение и попробуйте ещё раз."
+
+[editorEdit]
+other = "Редактировать wiki"
+
+[editorEditing]
+other = "Редактирование wiki"
+
+[editorCancel]
+other = "Отмена"
+
+[editorPublish]
+other = "Опубликовать"

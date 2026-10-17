@@ -1,0 +1,6 @@
+fastapi==0.115.12
+uvicorn==0.34.2
+ruamel.yaml==0.18.10
+markdown-it-py==3.0.0
+argon2-cffi==25.1.0
+tomlkit==0.13.3

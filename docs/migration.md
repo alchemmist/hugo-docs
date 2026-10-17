@@ -30,10 +30,10 @@ docker compose -f compose.wiki.yaml run -T --rm --no-deps \
   'import sys, tarfile; archive = tarfile.open(fileobj=sys.stdout.buffer, mode="w|"); archive.add("/data", arcname="data", recursive=True); archive.close()' \
   > backup/wiki-data.tar
 chmod 600 backup/wiki-data.tar
-make wiki-up
+docker compose -f compose.wiki.yaml up -d --no-build
 ```
 
-Use this after the image has already been built. Retain the same Compose project name and volume configuration throughout; otherwise you may back up a new empty volume. The archive contains private data and credentials, so encrypt it before transferring it to untrusted storage. Tar preserves symbolic links; restoring under `/data` preserves the existing absolute publication pointer where present.
+Use this after the selected image has already been pulled or built; keep the same image version for the backup and restart. Retain the same Compose project name and volume configuration throughout; otherwise you may back up a new empty volume. The archive contains private data and credentials, so encrypt it before transferring it to untrusted storage. Tar preserves symbolic links; restoring under `/data` preserves the existing absolute publication pointer where present.
 
 A successful command is only the beginning of verification. Record a checksum, restore into a separate volume, and test startup, login, accepted content, attachments and pending Git state. Use an isolated hostname and disable Git sync during the rehearsal so the restored copy cannot push into the production branch.
 
@@ -73,10 +73,10 @@ If every administrator credential is lost, preserve the volume before recovery. 
 6. Switch routes only after startup and acceptance checks succeed. Preserve both public and private DNS/proxy routes if the site uses them. Enable one Git writer, then test immediate publication and eventual synchronization.
 7. Retire old automation only after checking resource ownership and retention policies. Deleting an old GitOps installation may delete its volumes or shared resources unless explicitly protected.
 
-For the previous Socrat runtime, the existing content prefix is `wiki/content`, not `content`. Set `CONTENT_PREFIX=wiki/content` in the migrated deployment; moving the directory without migrating local Git history and pending patch paths breaks compatibility. Back up both `/data/repository` and `/data/live`. The Socrat-specific cutover runbook remains in homelab. The generic backup utility below ships with this distribution.
+For the previous Socrat runtime, the existing content prefix is `wiki/content`, not `content`. Set `CONTENT_PREFIX=wiki/content` in the migrated deployment; moving the directory without migrating local Git history and pending patch paths breaks compatibility. Back up both `/data/repository` and `/data/live`. The Socrat-specific cutover runbook remains in homelab. The generic backup utility described above ships with this distribution.
 
 ## Rollback and upgrades
 
 Before any new write is accepted, rollback can switch routes back to the stopped old deployment and its retained volume, after stopping the new writer. Once the new runtime accepts writes, preserve and reconcile them before reopening the old installation. Merely switching the ingress at that point hides new content.
 
-Keep a pre-upgrade backup and test upgrades on a restored copy. Do not assume an older binary can open an account database or publication format changed by a newer version. Versioned release artifacts, schema compatibility and the restore rehearsal determine whether rollback is safe; the presence of a chart version in an unreleased checkout does not establish compatibility.
+Keep a pre-upgrade backup and test upgrades on a restored copy. Do not assume an older binary can open an account database or publication format changed by a newer version. The published v0.2.0 image and chart provide pinned release versions; schema compatibility and a successful restore rehearsal still determine whether rollback is safe.

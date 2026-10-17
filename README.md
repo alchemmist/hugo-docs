@@ -6,11 +6,15 @@ Folders expand in the sidebar; only notes have pages. Search, breadcrumbs, and p
 
 ## Start an editable wiki
 
-The runtime is currently an unreleased source build. From this repository, run:
+Release [v0.2.0](https://github.com/alchemmist/hugo-docs/releases/tag/v0.2.0) includes a public runtime image and Helm chart. With Docker Compose installed:
 
 ```sh
-make wiki-up
+git clone --branch v0.2.0 https://github.com/alchemmist/hugo-docs.git
+cd hugo-docs
+docker compose -f compose.wiki.yaml up -d --no-build
 ```
+
+This starts the published `ghcr.io/alchemmist/hugo-docs-wiki:0.2.0` image without a local build. To build your own image from this checkout instead, run `make wiki-up`.
 
 Open <http://localhost:8080/login> and create the first administrator. Read the one-time bootstrap token locally:
 

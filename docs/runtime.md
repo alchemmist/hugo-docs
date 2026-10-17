@@ -1,16 +1,18 @@
 # Wiki runtime
 
-The optional runtime adds an inline editor and local accounts to the Hugo theme. It is currently built from source; commands below do not depend on an already published runtime release. The regular static theme remains usable without the runtime or editor.
+The optional runtime adds an inline editor and local accounts to the Hugo theme. Release [v0.2.0](https://github.com/alchemmist/hugo-docs/releases/tag/v0.2.0) provides the public image `ghcr.io/alchemmist/hugo-docs-wiki:0.2.0` and an OCI Helm chart. The regular static theme remains usable without the runtime or editor.
 
 ## Run locally
 
 From the repository root, with Docker Compose installed:
 
 ```sh
-make wiki-up
+docker compose -f compose.wiki.yaml up -d --no-build
 ```
 
-This builds `runtime/Dockerfile`, starts one process on `127.0.0.1:8080`, and creates a persistent `wiki-data` volume. The image starts with the neutral `runtime-site/` template. The initial build downloads pinned build dependencies; normal publication uses the packaged Hugo templates.
+This pulls the published image when it is not already present, starts one process on `127.0.0.1:8080`, and creates a persistent `wiki-data` volume. The image starts with the neutral `runtime-site/` template; normal publication uses its packaged Hugo templates.
+
+For a source build or a customized template, run `make wiki-up` instead. This builds `runtime/Dockerfile` before starting the service; the initial build downloads pinned build dependencies.
 
 Read the bootstrap token on the host:
 
@@ -25,7 +27,7 @@ Use `make wiki-logs` for logs and `make wiki-down` to stop. Do not run `docker c
 To use another local port, set both the mapped port and canonical URL:
 
 ```sh
-WIKI_PORT=8085 WIKI_URL=http://localhost:8085 make wiki-up
+WIKI_PORT=8085 WIKI_URL=http://localhost:8085 docker compose -f compose.wiki.yaml up -d --no-build
 ```
 
 ## Accounts and permissions
@@ -40,7 +42,7 @@ Roles apply to the entire wiki:
 
 The account control provides sign-in, sign-out and password change. Administrators also see user management there. Usernames are case-insensitive and need not be email addresses. Passwords must contain at least eight characters and are stored as Argon2 hashes. Sessions are persisted in SQLite and expire after eight hours. Password reset, disabling an account and role changes revoke its sessions. The final enabled administrator cannot be disabled or demoted through user management.
 
-Reading is public by default; local accounts are still required for editing. Start with `WIKI_PUBLIC=false make wiki-up` to require login for reading too. The backend enforces access for content, search, media and API requests. A hidden editing button is not an access-control boundary.
+Reading is public by default; local accounts are still required for editing. Start with `WIKI_PUBLIC=false docker compose -f compose.wiki.yaml up -d --no-build` to require login for reading too. The backend enforces access for content, search, media and API requests. A hidden editing button is not an access-control boundary.
 
 Use HTTPS when exposing the service outside localhost. Configure a reverse proxy to send requests to port 8080 and set the exact external canonical URL. HTTPS URLs enable secure session cookies; mutation requests require the matching Origin and a CSRF token. The runtime does not accept the legacy Socrat/WireGuard authorization headers.
 
@@ -96,6 +98,12 @@ External edits should go through the remote workflow, not directly into the runn
 
 Run exactly one worker and one writable runtime replica for each volume. The image uses one Uvicorn worker; a filesystem lock prevents a second local writer. It is not a distributed multi-writer service. The image runs as UID/GID 1000, so bind-mounted storage and secret files must be readable/writable as appropriate by that identity.
 
-The chart is in `charts/wiki/`. Its deployment uses one replica and `Recreate`; use an immutable built image digest, a bootstrap Secret with key `token`, and a persistent claim. Optional Git SSH Secrets contain `id_ed25519` and `known_hosts`. Chart/image version declarations in this source tree are not evidence that artifacts have been released. Do not deploy until your selected image is available and tested.
+The published chart is `oci://ghcr.io/alchemmist/charts/wiki`, version `0.2.0`; its source is in `charts/wiki/`. Download it with:
+
+```sh
+helm pull oci://ghcr.io/alchemmist/charts/wiki --version 0.2.0
+```
+
+Its deployment uses one replica and `Recreate`; pin an image digest for production, provide a bootstrap Secret with key `token`, and configure a persistent claim. Optional Git SSH Secrets contain `id_ed25519` and `known_hosts`. Test your configured release on a restored copy before upgrading an existing installation.
 
 Back up the complete volume and site configuration before upgrades. See [backup, recovery and migration](migration.md). Check runtime health, publication errors, pending Git synchronization, storage usage and recoverability after every upgrade.

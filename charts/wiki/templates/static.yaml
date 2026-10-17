@@ -1,0 +1,13 @@
+{{- if .Values.staticFiles }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "wiki.name" . | trunc 56 | trimSuffix "-" }}-static
+data:
+  {{- range $path, $content := .Values.staticFiles }}
+  {{- if not (regexMatch "^[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*$" $path) }}
+  {{- fail (printf "staticFiles contains an unsafe path: %s" $path) }}
+  {{- end }}
+  {{ sha256sum $path }}: {{ $content | quote }}
+  {{- end }}
+{{- end }}

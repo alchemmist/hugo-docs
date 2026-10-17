@@ -1,0 +1,13 @@
+url: http://localhost:8080
+site: /opt/wiki
+public: true
+storage:
+  path: /data
+  content_prefix: content
+git:
+  repository: ''
+  branch: main
+  author: Wiki editor
+  email: wiki@localhost
+auth:
+  bootstrap_secret_file: /data/bootstrap-token

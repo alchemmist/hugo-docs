@@ -1,8 +1,26 @@
 # Alchemmist Docs
 
-A minimal Hugo documentation theme with Computer Modern typography, folder navigation, a page outline, and local full-text search. Built on [hugo-content](https://github.com/alchemmist/hugo-content).
+A Hugo documentation theme and an optional self-hosted wiki runtime with inline editing, local accounts, and persistent content. Both use Computer Modern typography, folder navigation, a page outline, and local full-text search. Built on [hugo-content](https://github.com/alchemmist/hugo-content).
 
 Folders expand in the sidebar; only notes have pages. Search, breadcrumbs, and previous/next navigation follow the same model.
+
+## Start an editable wiki
+
+The runtime is currently an unreleased source build. From this repository, run:
+
+```sh
+make wiki-up
+```
+
+Open <http://localhost:8080/login> and create the first administrator. Read the one-time bootstrap token locally:
+
+```sh
+docker compose -f compose.wiki.yaml exec wiki cat /data/bootstrap-token
+```
+
+Keep that token private. The default site is neutral, reading is public, editing requires a local account, and content persists in the `wiki-data` volume. No Git remote, Kubernetes or OIDC is required. Do not remove the volume when stopping the service.
+
+See [runtime configuration and accounts](docs/runtime.md), [backup and migration](docs/migration.md), and [editor plugins](docs/plugins.md). For a static site without a backend, use the workflow below.
 
 ## Start a documentation site
 
@@ -27,7 +45,7 @@ Initialize a Hugo module if your project does not already have `go.mod`:
 
 ```sh
 hugo mod init example.com/my-docs
-hugo mod get github.com/alchemmist/hugo-docs@v0.1.0
+hugo mod get github.com/alchemmist/hugo-docs@v0.2.0
 ```
 
 Configure `hugo.toml`:
@@ -52,7 +70,7 @@ Place your logo at `static/images/logo.svg`, or set `logo = ''` for a text-only 
 
 `_merge = 'deep'` opts into the theme's configuration, including folder-only sections, the search output, syntax highlighting, math delimiters, and raw HTML support. Hugo otherwise does not inherit all of these settings from modules. See [Hugo configuration merging](https://gohugo.io/configuration/introduction/#merge-configuration-settings). Site configuration can override theme settings.
 
-The theme defaults to indexable output. The starter and demo explicitly set `noindex = true`; change it for a public site you want indexed. This controls robots metadata only, not authentication. Private documentation needs access control at its hosting layer.
+The theme defaults to indexable output. The starter and demo explicitly set `noindex = true`; change it for a public site you want indexed. This controls robots metadata only, not authentication. Private static documentation needs access control at its hosting layer. The optional runtime can require local-account authentication for reading as well.
 
 The supported installation is a Hugo module. The pinned `hugo-content` dependency supplies fonts and browser libraries automatically; no npm step is required.
 
@@ -108,7 +126,7 @@ make up
 
 `exampleSite/` uses a local module replacement pointing to this repository. `make build` renders the demo into `public/`; `make dev` provides live reload; `make up` builds and runs the demo container. `make check` builds independent English and Russian consumers under `/docs/` and checks navigation, search, branding, content isolation, local assets, and the starter generator.
 
-The root contains only theme assets and templates. `exampleSite/` contains the full content specimen; `starter/` contains the small scaffold used by `scripts/new_site.py`. CI runs integration checks and builds the Docker image.
+The root contains the Hugo theme and runtime build configuration. `exampleSite/` contains the content specimen; `starter/` is the static-site scaffold; `runtime-site/` is the neutral editable-wiki template. `editor/` contains the browser editor and `runtime/` its Python backend. Static consumers need neither Python nor Node at serving time. Use `make wiki-check` for backend/editor checks after installing their development dependencies; `make wiki-build` builds the runtime image.
 
 ## Deployment
 

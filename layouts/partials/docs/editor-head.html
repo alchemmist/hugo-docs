@@ -1,0 +1,6 @@
+{{ if .Site.Params.docs.editor.enabled }}
+{{ $style := resources.Get "wiki-editor.css" | minify | fingerprint }}
+<link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
+{{ $script := resources.Get "wiki-editor.js" | minify | fingerprint }}
+<script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}" defer></script>
+{{ end }}

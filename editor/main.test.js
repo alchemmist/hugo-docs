@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+
+test('opening an existing page finishes loading with an enabled Publish action',async()=>{
+  const dom=new JSDOM('<html lang="en"><body><h1 id="page-title">Page</h1><div class="document"><article class="hc-content"><p>Text</p></article></div><div id="wiki-editor" data-path="page.md" data-base-path="/" data-api-base="/api/editor"><div class="wiki-editor-actions" hidden><button data-editor-open>Edit</button></div><div class="wiki-editbar" hidden><button data-editor-cancel>Cancel</button><button data-editor-save>Publish</button></div><p role="alert" hidden></p></div></body></html>',{url:'http://localhost/'});
+  for(const key of ['window','document','HTMLElement','Element','Node','MutationObserver','DOMParser','sessionStorage','location','history','getComputedStyle'])globalThis[key]=dom.window[key];
+  Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configurable:true});
+  globalThis.matchMedia=()=>({matches:false,addEventListener(){}});
+  globalThis.requestAnimationFrame=fn=>setTimeout(fn,0);
+  globalThis.cancelAnimationFrame=clearTimeout;
+  globalThis.fetch=async url=>({ok:true,json:async()=>url.includes('/session')?{user:{id:1,username:'editor',role:'editor'},csrf_token:'csrf',writable:true}:url.includes('/pages')?{title:'Page',body:'Text\n',revision:'r1'}:{html:'<p>Text</p>'}});
+  await import('./main.js');
+  await new Promise(resolve=>setTimeout(resolve,20));
+  document.querySelector('[data-editor-open]').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(document.querySelector('.wiki-editbar').hidden,false);
+  assert.equal(document.querySelector('[data-editor-save]').textContent,'Publish');
+  assert.equal(document.querySelector('[data-editor-save]').disabled,false);
+  assert.equal(document.querySelector('.wiki-editbar').getAttribute('aria-busy'),'false');
+  dom.window.close();
+});

@@ -111,3 +111,15 @@ other = "Start with these pages or enter a query."
 
 [searchError]
 other = "Could not load search. Check your connection and try again."
+
+[editorEdit]
+other = "Edit wiki"
+
+[editorEditing]
+other = "Editing wiki"
+
+[editorCancel]
+other = "Cancel"
+
+[editorPublish]
+other = "Publish"

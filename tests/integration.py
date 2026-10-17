@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 import subprocess
 import sys
@@ -112,7 +113,12 @@ flowchart LR
                 assert path.startswith('/docs/'), f'Path escaped baseURL: {url}'
                 target = public / path.removeprefix('/docs/')
                 assert target.is_file() or (target / 'index.html').is_file(), f'Broken URL: {url}'
-    for path in ['hugo-content/fonts/cmu.serif-roman.woff2', 'hugo-content/lib/mermaid.js', 'hugo-content/lib/mathjax/tex-svg.js', 'hugo-content/lib/zoom.js']:
+    fonts = list((public / 'hugo-content/fonts').glob('*.woff2'))
+    assert len(fonts) == 5
+    for font in fonts:
+        assert hashlib.sha256(font.read_bytes()).hexdigest() in font.name
+    assert 'wiki-editor' not in home
+    for path in ['hugo-content/lib/mermaid.js', 'hugo-content/lib/mathjax/tex-svg.js', 'hugo-content/lib/zoom.js']:
         assert (public / path).is_file(), path
     assert 'class=mermaid' in page or 'class="mermaid"' in page
     run('hugo', 'new', 'content', 'engineering/generated.md', cwd=site)

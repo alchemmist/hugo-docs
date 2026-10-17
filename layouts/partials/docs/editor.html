@@ -1,0 +1,12 @@
+{{ if .Site.Params.docs.editor.enabled }}
+{{ $bodyHash := crypto.SHA256 (strings.TrimLeft "\n" .RawContent) }}
+{{ with .File }}
+<div id="wiki-editor" data-api-base="{{ "api/editor" | relURL }}" data-base-path="{{ $.Site.Home.RelPermalink }}" data-path="{{ .Path }}" data-body-hash="{{ $bodyHash }}">
+  <div class="wiki-editor-actions" hidden>
+    <button class="icon-button" type="button" data-editor-open aria-label="{{ T "editorEdit" }}" title="{{ T "editorEdit" }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button>
+  </div>
+  <div class="wiki-editbar" hidden><span>{{ T "editorEditing" }}</span><button type="button" data-editor-cancel>{{ T "editorCancel" }}</button><button type="button" data-editor-save>{{ T "editorPublish" }}</button></div>
+  <p class="wiki-editor-error" role="alert" hidden></p>
+</div>
+{{ end }}
+{{ end }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: wiki
+description: Hugo documentation with a persistent visual wiki editor
+type: application
+version: 0.2.0
+appVersion: "0.2.0"

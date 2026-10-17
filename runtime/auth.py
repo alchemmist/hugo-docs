@@ -1,8 +1,10 @@
 from contextlib import contextmanager
 import hashlib
 import hmac
+import html
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import sqlite3
@@ -13,7 +15,7 @@ from urllib.parse import urlsplit
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
 from fastapi import HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
 ROLES = frozenset(('reader', 'editor', 'admin'))
 PASSWORD_HASHER = PasswordHasher()
@@ -34,6 +36,60 @@ def login_language(header):
         if language in ('en', 'ru') and 0 < quality <= 1:
             choices.append((quality, -index, language))
     return max(choices)[2] if choices else 'en'
+
+
+class SystemPages:
+    def __init__(self, directory):
+        self.directory = Path(directory)
+
+    @property
+    def assets(self):
+        snapshot = SystemPages(self.directory.resolve())
+        manifest = snapshot.directory / 'public-assets.json'
+        assets = {}
+        if manifest.is_file():
+            entries = json.loads(manifest.read_text())
+            if not isinstance(entries, dict):
+                raise ValueError('Invalid system assets manifest')
+            for url, relative in entries.items():
+                if not isinstance(url, str) or not url.startswith('/') or '?' in url or '#' in url:
+                    raise ValueError('Invalid system asset URL')
+                target = snapshot.file(relative)
+                if target.suffix.lower() not in ('.css', '.js', '.woff2', '.woff', '.ttf', '.otf', '.svg', '.png', '.ico'):
+                    raise ValueError('Unsupported public system asset')
+                assets[url] = target
+        return assets
+
+    def file(self, relative):
+        if not isinstance(relative, str) or Path(relative).is_absolute():
+            raise ValueError('Invalid system page path')
+        target = (self.directory / relative).resolve()
+        if not target.is_relative_to(self.directory.resolve()) or not target.is_file():
+            raise ValueError('Missing or unsafe system page file')
+        return target
+
+    def language(self, header):
+        try:
+            language = self.file('language.txt').read_text().strip()
+        except ValueError:
+            language = None
+        return language if language in ('en', 'ru') else login_language(header)
+
+    def render(self, page, language, prefix):
+        try:
+            source = self.file(f'{page}.{language}.html').read_text()
+        except ValueError as error:
+            raise HTTPException(503, 'System pages are unavailable') from error
+        nonce = secrets.token_urlsafe(24)
+        body = source.replace('__WIKI_BASE_PATH__', html.escape(prefix, quote=True)).replace('__WIKI_NONCE__', nonce)
+        return HTMLResponse(body, headers={
+            'Cache-Control': 'no-store',
+            'Content-Security-Policy': f"default-src 'none'; script-src 'self' 'nonce-{nonce}'; style-src 'self' 'nonce-{nonce}'; font-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+            'Referrer-Policy': 'no-referrer',
+            'X-Content-Type-Options': 'nosniff',
+            'Content-Language': language,
+            'Vary': 'Accept-Language',
+        })
 
 
 class AuthStore:
@@ -162,7 +218,8 @@ class AuthStore:
             return self.public_user(db.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone())
 
 
-def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_secret='', session_seconds=28800):
+def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_secret='', session_seconds=28800, system_pages_dir=None):
+    pages = SystemPages(system_pages_dir or os.getenv('WIKI_SYSTEM_PAGES_DIR', '/opt/wiki-system'))
     parsed = urlsplit(origin)
     allowed_origin = parsed.scheme + '://' + parsed.netloc
     prefix = '/' + (base_path or parsed.path).strip('/') if (base_path or parsed.path).strip('/') else ''
@@ -220,8 +277,14 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
         path = request.url.path
         if prefix and (path == prefix or path.startswith(prefix + '/')):
             path = path[len(prefix):] or '/'
+        asset = pages.assets.get(path) if Path(path).suffix.lower() in ('.css', '.js', '.woff', '.woff2', '.ttf', '.otf', '.svg', '.png', '.ico') else None
+        if asset is not None and request.method in ('GET', 'HEAD'):
+            cache = 'public, max-age=31536000, immutable' if re.search(r'[.-][a-f0-9]{32,128}\.', path) else 'no-store'
+            return FileResponse(asset, headers={'X-Content-Type-Options': 'nosniff', 'Cache-Control': cache})
         session = store.session(request.cookies.get('wiki_session'))
         request.state.auth = session
+        if path in ('/admin', '/admin/') and not session:
+            return RedirectResponse(prefix + '/login', status_code=303, headers={'Cache-Control': 'no-store'})
         auth_route = path.startswith('/api/auth/')
         editor_route = path == '/api/editor' or path.startswith('/api/editor/')
         admin_route = path == '/api/admin' or path.startswith('/api/admin/')
@@ -257,49 +320,15 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
     @app.get('/login/', response_class=HTMLResponse)
     async def login_page(request: Request):
         if request.state.auth:
-            return RedirectResponse(prefix + '/', status_code=303)
-        nonce = secrets.token_urlsafe(24)
-        language = login_language(request.headers.get('accept-language', ''))
-        page = """<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in to wiki</title>
-<style nonce="NONCE">body{font:16px system-ui;margin:10vh auto;padding:24px;max-width:360px}form{display:grid;gap:16px}label{display:grid;gap:6px}input,button{font:inherit;padding:10px}#error{color:#a00}[hidden]{display:none}</style>
-<h1 id="title">Sign in to wiki</h1><form id="form"><label>Username<input name="username" autocomplete="username" required maxlength="254"></label><label>Password<input name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="1024"></label><label id="bootstrap" hidden>Bootstrap token<input name="secret" type="password" autocomplete="off"></label><button id="submit">Sign in</button><p id="error" role="alert"></p></form>
-<script nonce="NONCE">const base=BASE;const form=document.querySelector('form');const error=document.querySelector('#error');const submit=document.querySelector('#submit');let bootstrap=false;
-async function request(path,body){const response=await fetch(base+path,{method:body?'POST':'GET',credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});const value=await response.json();if(!response.ok)throw new Error(typeof value.detail==='string'?value.detail:'Request failed');return value;}
-request('/api/auth/me').then(value=>{bootstrap=!!value.bootstrap_required;document.querySelector('#bootstrap').hidden=!bootstrap;if(bootstrap){document.querySelector('#title').textContent='Create administrator';submit.textContent='Create administrator';form.elements.password.autocomplete='new-password';}}).catch(e=>{error.textContent=e.message;});
-form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;error.textContent='';const body=Object.fromEntries(new FormData(form));try{if(bootstrap)await request('/api/auth/bootstrap',body);await request('/api/auth/login',body);location.assign(base+'/');}catch(e){error.textContent=e.message;}finally{submit.disabled=false;}});</script></html>"""
-        page = page.replace('NONCE', nonce).replace('BASE', json.dumps(prefix).replace('<', '\\u003c'))
-        if language == 'ru':
-            translations = {
-                'Sign in to wiki': 'Вход в wiki',
-                'Username': 'Логин',
-                'Password': 'Пароль',
-                'Bootstrap token': 'Секрет первоначальной настройки',
-                'Sign in': 'Войти',
-                'Create administrator': 'Создать администратора',
-                'Request failed': 'Не удалось выполнить запрос',
-            }
-            page = page.replace('lang="en"', 'lang="ru"')
-            for source, destination in translations.items():
-                page = page.replace(source, destination)
-            errors = {
-                'Invalid credentials': 'Неверный логин или пароль',
-                'Invalid bootstrap secret': 'Неверный секрет первоначальной настройки',
-                'Administrator already initialized': 'Администратор уже создан',
-                'Too many login attempts; retry later': 'Слишком много попыток входа. Попробуйте позже',
-                'Password must contain 8 to 1024 characters': 'Пароль должен содержать от 8 до 1024 символов',
-                'Invalid username': 'Некорректный логин',
-                'Username already exists': 'Такой логин уже существует',
-                'Invalid request origin': 'Недопустимый источник запроса',
-            }
-            page = page.replace("typeof value.detail==='string'?value.detail:",
-                                "typeof value.detail==='string'?(" + json.dumps(errors, ensure_ascii=False) + "[value.detail]||value.detail):")
-        return HTMLResponse(page, headers={
-            'Cache-Control': 'no-store',
-            'Content-Security-Policy': f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'nonce-{nonce}'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
-            'Referrer-Policy': 'no-referrer',
-            'Content-Language': language,
-            'Vary': 'Accept-Language',
-        })
+            return RedirectResponse(prefix + '/admin', status_code=303, headers={'Cache-Control': 'no-store'})
+        language = pages.language(request.headers.get('accept-language', ''))
+        return pages.render('login', language, prefix)
+
+    @app.get('/admin', response_class=HTMLResponse)
+    @app.get('/admin/', response_class=HTMLResponse)
+    async def admin_page(request: Request):
+        language = pages.language(request.headers.get('accept-language', ''))
+        return pages.render('admin', language, prefix)
 
     @app.get('/api/editor/session')
     @app.get('/api/auth/me')

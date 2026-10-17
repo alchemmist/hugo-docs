@@ -5,7 +5,9 @@ visual systems, not a replacement identity.
 
 Pure white, ink #171717, link blue #173ea5, secondary ink #666666, dividers #e5e5e5.
 No cards, gradients, decorative shadows or dashboard statistics. Navigation uses
-local JetBrains Mono. Long-form content uses the module's Computer Modern fonts.
+the configured local monospace family, with JetBrains Mono as the generic fallback.
+Socrat uses the exact CourierCyr regular, bold, italic and bold italic faces from
+the blog for navigation, controls and code. Long-form content uses Computer Modern.
 
 A 264px left rail contains the existing blog logo, search, and a nested page tree.
 The brand contains only the round logo and alchemmist, centered as one group
@@ -32,6 +34,11 @@ right on mobile, without an overall layout width cap. The right outline aligns
 with the right screen gutter.
 
 Do not include back-to-top buttons or links anywhere in the documentation.
+
+Account management lives on the full `/admin` page; login lives on `/login`.
+Both inherit the site's fonts, language and white/ink palette. Use serif headings,
+monospace form controls, a quiet site link and a centered content column. Account,
+Git status and user management are ordinary page sections, never modal panels.
 
 Sections are folders, never document pages. Their entire row toggles the child
 list. Only notes and the home overview have URLs, search results, and pager links.

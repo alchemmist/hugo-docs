@@ -1,0 +1,15 @@
+{{ with .Site.Params.content.typography }}
+{{ $family := .monoFamily }}
+{{ range $face := slice (dict "path" .monoRegular "weight" 400 "style" "normal") (dict "path" .monoBold "weight" 700 "style" "normal") (dict "path" .monoItalic "weight" 400 "style" "italic") (dict "path" .monoBoldItalic "weight" 700 "style" "italic") }}
+{{ with .path }}
+@font-face {
+  font-family: {{ $family | jsonify }};
+  src: url({{ . | relURL | jsonify }}) format("woff2");
+  font-weight: {{ $face.weight }};
+  font-style: {{ $face.style }};
+  font-display: swap;
+}
+{{ end }}
+{{ end }}
+:root { --ui: {{ .monoFamily | jsonify }}, monospace; --hc-font-mono: "NerdFontsSymbols Nerd Font", {{ .monoFamily | jsonify }}, monospace; }
+{{ end }}

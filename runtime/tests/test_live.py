@@ -236,6 +236,8 @@ class LiveTest(unittest.TestCase):
             self.assertEqual(kwargs['env']['HUGO_MODULE_PROXY'], 'off')
             self.assertEqual(kwargs['env']['GOPROXY'], 'off')
             (destination / 'public').mkdir()
+            from system_assets import SHELLS
+            (destination / 'public/wiki-system.json').write_text(json.dumps(dict.fromkeys(SHELLS, '<html>System page</html>')))
             return subprocess.CompletedProcess(args, 0, '', '')
         with patch('live.subprocess.run', side_effect=render):
             self.real_build(self.live, destination)

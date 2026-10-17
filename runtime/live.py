@@ -89,9 +89,14 @@ class LiveWiki:
     def build(self, destination):
         self.services.tree_nodes()
         env = dict(os.environ, HUGO_MODULE_PROXY='off', GOPROXY='off', HUGO_CACHEDIR=str(self.root / 'hugo-cache'), HUGO_RESOURCEDIR=str(self.root / 'hugo-resources'))
-        result = subprocess.run([os.getenv('HUGO_BINARY', 'hugo'), '--source', str(self.template), '--contentDir', str(self.services.WORK / self.services.PREFIX), '--destination', str(destination / 'public'), '--baseURL', self.services.ORIGIN + '/', '--noBuildLock'], env=env, capture_output=True, text=True, timeout=60)
+        system_config = self.root / 'system-outputs.toml'
+        system_config.write_text("[outputs]\nhome = ['HTML', 'SearchIndex', 'WikiSystem']\n")
+        result = subprocess.run([os.getenv('HUGO_BINARY', 'hugo'), '--source', str(self.template), '--config', 'hugo.toml,' + str(system_config), '--contentDir', str(self.services.WORK / self.services.PREFIX), '--destination', str(destination / 'public'), '--baseURL', self.services.ORIGIN + '/', '--noBuildLock'], env=env, capture_output=True, text=True, timeout=60)
         if result.returncode:
             raise HTTPException(422, 'Wiki cannot be published: ' + result.stderr[-1500:])
+        from system_assets import extract_system_pages
+        from urllib.parse import urlsplit
+        extract_system_pages(destination, urlsplit(self.services.ORIGIN).path.rstrip('/'))
 
     def publish(self, base, commit, pending=True, actor=None):
         destination = self.root / 'snapshots' / commit

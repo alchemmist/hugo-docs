@@ -1,0 +1,31 @@
+.wiki-system-shell { max-width: 920px; margin: 0 auto; padding: 32px 28px; }
+.wiki-system-header { margin-bottom: 64px; font: 16px/1.5 var(--ui); }
+.wiki-system-header a { color: var(--ink); text-decoration: none; }
+#wiki-login { max-width: 440px; margin: 0 auto; }
+:is(#wiki-admin, #wiki-login) { width: 100%; padding-bottom: 48px; }
+:is(#wiki-admin, #wiki-login) h1 { margin: 0 0 16px; font: 700 30px/1.18 var(--prose); text-wrap: balance; }
+:is(#wiki-admin, #wiki-login) h2 { margin: 0 0 20px; font: 700 24px/1.25 var(--prose); }
+:is(#wiki-admin, #wiki-login) h3 { margin: 0; font: 700 18px/1.4 var(--prose); overflow-wrap: anywhere; }
+.wiki-admin-identity { overflow-wrap: anywhere; margin: 0 0 16px; }
+.wiki-admin-section { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.wiki-admin-form { display: grid; gap: 16px; max-width: 440px; }
+:is(#wiki-admin, #wiki-login) label { display: grid; gap: 6px; font: 14px/1.5 var(--ui); }
+:is(#wiki-admin, #wiki-login) input, :is(#wiki-admin, #wiki-login) select, :is(#wiki-admin, #wiki-login) button { font: 14px/1.5 var(--ui); color: var(--ink); border: 1px solid var(--rule); border-radius: 3px; padding: 9px 12px; background: #fff; min-width: 0; max-width: 100%; }
+:is(#wiki-admin, #wiki-login) input, :is(#wiki-admin, #wiki-login) select { width: 100%; min-height: 42px; }
+:is(#wiki-admin, #wiki-login) button { width: fit-content; min-height: 42px; }
+:is(#wiki-admin, #wiki-login) button:hover { border-color: var(--muted); background: #f5f5f5; }
+:is(#wiki-admin, #wiki-login) button:disabled, :is(#wiki-admin, #wiki-login) select:disabled { opacity: .55; cursor: wait; }
+:is(#wiki-admin, #wiki-login) :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.wiki-admin-status { font: 14px/1.5 var(--ui); overflow-wrap: anywhere; margin: 12px 0; }
+.wiki-admin-status:empty { display: none; }
+.wiki-admin-sync { overflow-wrap: anywhere; font: 16px/1.6 var(--prose); }
+.wiki-admin-user { padding: 24px 0; border-bottom: 1px solid var(--rule); }
+.wiki-admin-user:first-child { padding-top: 0; }
+.wiki-admin-user:last-child { margin-bottom: 20px; }
+.wiki-admin-user-state { margin: 4px 0 16px; color: var(--muted); font-size: 13px; }
+.wiki-admin-user-controls { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 16px; }
+.wiki-admin-user-controls label { flex: 1 1 180px; max-width: 280px; }
+.wiki-admin-user .wiki-admin-form { grid-template-columns: minmax(0, 1fr) auto; max-width: none; align-items: end; }
+.wiki-admin-user .wiki-admin-status { grid-column: 1 / -1; }
+@media (max-width: 480px) { .wiki-admin-user .wiki-admin-form { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .wiki-system-shell { padding: 24px 20px; } .wiki-system-header { margin-bottom: 40px; } }

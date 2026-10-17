@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import os
 import sys
 from pathlib import Path
@@ -10,7 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from auth import AuthStore, install_auth
+from auth import AuthStore, SystemPages, install_auth
 
 
 class AuthTests(unittest.TestCase):
@@ -18,6 +19,17 @@ class AuthTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.store = AuthStore(Path(self.directory.name) / 'auth.sqlite3')
+        self.pages = Path(self.directory.name) / 'system-pages'
+        self.pages.mkdir()
+        for page in ('login', 'admin'):
+            for language in ('en', 'ru'):
+                (self.pages / f'{page}.{language}.html').write_text(
+                    f'<html lang="{language}"><div id="wiki-{page}" data-base-path="__WIKI_BASE_PATH__"></div></html>')
+        (self.pages / 'theme.css').write_text('body{font-family:CourierCyr}')
+        (self.pages / 'font.woff2').write_bytes(b'font')
+        (self.pages / 'public-assets.json').write_text(json.dumps({
+            '/theme.css': 'theme.css', '/fonts/font.woff2': 'font.woff2',
+        }))
 
     def test_persistent_sessions_and_revocation(self):
         admin = self.store.create_user('admin', 'long-password', 'admin', bootstrap=True)
@@ -52,7 +64,7 @@ class AuthTests(unittest.TestCase):
     def client(self, public=True):
         app = FastAPI()
         store = install_auth(app, origin='https://wiki.example', data_dir=self.directory.name,
-                             public=public, bootstrap_secret='bootstrap-test')
+                             public=public, bootstrap_secret='bootstrap-test', system_pages_dir=self.pages)
         @app.get('/api/editor/tree')
         def tree():
             return {'ok': True}
@@ -128,6 +140,7 @@ class AuthTests(unittest.TestCase):
         with patch.dict(os.environ, {
             'WIKI_CONFIG': str(Path(self.directory.name) / 'absent.yaml'),
             'LIVE_MODE': 'false', 'WIKI_PUBLIC': 'false',
+            'WIKI_SYSTEM_PAGES_DIR': str(self.pages),
             'WIKI_DATA_DIR': self.directory.name, 'PUBLIC_ORIGIN': 'https://wiki.example/docs',
             'WIKI_BOOTSTRAP_SECRET_FILE': str(Path(self.directory.name) / 'token'),
         }):
@@ -143,7 +156,7 @@ class AuthTests(unittest.TestCase):
         page = client.get('/docs/login')
         self.assertEqual(page.status_code, 200, page.text)
         self.assertIn('frame-ancestors', page.headers['content-security-policy'])
-        self.assertIn('const base="/docs"', page.text)
+        self.assertIn('data-base-path="/docs"', page.text)
         self.assertEqual(client.get('/api/editor/session').status_code, 404)
         module.AUTH.create_user('reader', 'long-password', 'reader')
         response = client.post('/docs/api/auth/login', json={'username': 'reader', 'password': 'long-password'},
@@ -154,7 +167,7 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(client.get('/docs/site/').status_code, 404)
         self.assertEqual(client.get('/docs/api/editor/session').json()['user']['role'], 'reader')
 
-    def test_login_page_localization_and_password_bounds(self):
+    def test_login_page_localization(self):
         client, _ = self.client()
         for preference, language, label in (
             ('ru-RU,ru;q=0.9,en;q=0.8', 'ru', 'Создать администратора'),
@@ -165,9 +178,84 @@ class AuthTests(unittest.TestCase):
             response = client.get('/login', headers={'Accept-Language': preference})
             self.assertEqual(response.headers['content-language'], language)
             self.assertIn(f'lang="{language}"', response.text)
-            self.assertIn(label, response.text)
-            self.assertIn('minlength="8" maxlength="1024"', response.text)
             self.assertIn('Accept-Language', response.headers['vary'])
+
+    def test_site_language_overrides_browser_preference(self):
+        client, store = self.client()
+        for language, preference in (('ru', 'en-US'), ('en', 'ru-RU')):
+            (self.pages / 'language.txt').write_text(language)
+            response = client.get('/login', headers={'Accept-Language': preference})
+            self.assertEqual(response.headers['content-language'], language)
+            self.assertIn(f'lang="{language}"', response.text)
+        store.create_user('reader', 'long-password', 'reader')
+        client.post('/api/auth/login', json={'username': 'reader', 'password': 'long-password'},
+                    headers={'Origin': 'https://wiki.example'})
+        (self.pages / 'language.txt').write_text('ru')
+        response = client.get('/admin', headers={'Accept-Language': 'en'})
+        self.assertEqual(response.headers['content-language'], 'ru')
+
+    def test_account_page_requires_login_for_public_wiki_and_allows_reader(self):
+        client, store = self.client()
+        for path in ('/admin', '/admin/'):
+            response = client.get(path, follow_redirects=False)
+            self.assertEqual(response.status_code, 303)
+            self.assertEqual(response.headers['location'], '/login')
+        store.create_user('reader', 'long-password', 'reader')
+        client.post('/api/auth/login', json={'username': 'reader', 'password': 'long-password'},
+                    headers={'Origin': 'https://wiki.example'})
+        response = client.get('/admin')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('id="wiki-admin"', response.text)
+        self.assertEqual(response.headers['cache-control'], 'no-store')
+        self.assertEqual(client.get('/api/admin/users').status_code, 403)
+        self.assertEqual(client.get('/login', follow_redirects=False).headers['location'], '/admin')
+
+    def test_private_login_assets_are_allowlisted_without_content_exposure(self):
+        client, _ = self.client(public=False)
+        for path in ('/theme.css', '/fonts/font.woff2'):
+            response = client.get(path)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.headers['x-content-type-options'], 'nosniff')
+        for path in ('/private.css', '/_wiki/private.css', '/fonts/private.woff2', '/search.json', '/upload-secret.png', '/private-page'):
+            self.assertEqual(client.get(path).status_code, 401, path)
+        response = client.get('/login')
+        self.assertIn("font-src 'self'", response.headers['content-security-policy'])
+        self.assertNotIn('system-ui', response.text)
+
+    def test_selected_icon_is_public_and_unhashed_resource_is_not_cached(self):
+        (self.pages / 'icon.svg').write_text('<svg></svg>')
+        fingerprint = 'a' * 64
+        (self.pages / 'public-assets.json').write_text(json.dumps({
+            '/images/icon.svg': 'icon.svg', f'/fonts/font.{fingerprint}.woff2': 'font.woff2',
+        }))
+        client, _ = self.client(public=False)
+        response = client.get('/images/icon.svg')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'<svg></svg>')
+        self.assertEqual(response.headers['cache-control'], 'no-store')
+        self.assertEqual(client.get('/images/private.png').status_code, 401)
+        response = client.get(f'/fonts/font.{fingerprint}.woff2')
+        self.assertIn('immutable', response.headers['cache-control'])
+
+    def test_system_pages_follow_current_publication(self):
+        current = Path(self.directory.name) / 'current'
+        current.symlink_to(self.pages, target_is_directory=True)
+        pages = SystemPages(current)
+        self.assertIn('wiki-login', pages.render('login', 'en', '').body.decode())
+        replacement = Path(self.directory.name) / 'replacement'
+        replacement.mkdir()
+        (replacement / 'login.en.html').write_text('<html>updated</html>')
+        (replacement / 'public-assets.json').write_text('{}')
+        current.unlink()
+        current.symlink_to(replacement, target_is_directory=True)
+        self.assertEqual(pages.render('login', 'en', '').body.decode(), '<html>updated</html>')
+        self.assertEqual(pages.assets, {})
+
+    def test_invalid_system_asset_manifest_cannot_expose_content(self):
+        for relative in ('../auth.sqlite3', '/etc/passwd', 'login.en.html'):
+            (self.pages / 'public-assets.json').write_text(json.dumps({'/_wiki/secret': relative}))
+            with self.assertRaises(ValueError):
+                SystemPages(self.pages).assets
 
     def test_self_password_requires_old_password_and_admin_reset_revokes(self):
         client, store = self.client()

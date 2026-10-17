@@ -1,6 +1,9 @@
 import argparse
 import http.cookiejar
 import json
+import re
+import urllib.error
+from urllib.parse import urljoin
 import secrets
 import subprocess
 import time
@@ -50,9 +53,32 @@ try:
     run('run', '-d', '--name', name, '-p', f'127.0.0.1:{args.port}:8080', '-e', 'PUBLIC_ORIGIN=' + base + '/docs', '-v', volume + ':/data', args.image)
     wait_for('/healthz')
     assert b'Your wiki' in request('/docs/')
+    login = request('/docs/login').decode()
+    assert '<dialog' not in login
+    with opener.open(base + '/docs/admin', timeout=30) as response:
+        assert '/docs/login' in response.url
+    try:
+        request('/docs/wiki-system.json')
+    except urllib.error.HTTPError as error:
+        assert error.code == 404
+    else:
+        raise AssertionError('System page manifest is public')
+    assets = re.findall(r'(?:href|src)=["\']([^"\']+\.(?:css|js|woff2)(?:\?[^"\']*)?)["\']', login)
+    assert assets
+    fonts = set()
+    for asset in assets:
+        content = request(asset)
+        if '.css' in asset:
+            for font in re.findall(r'url\(["\']?([^"\')]+\.woff2(?:\?[^"\')]*)?)["\']?\)', content.decode()):
+                fonts.add(urljoin(asset, font))
+                assert request(urljoin(asset, font))
+    assert fonts
     token = run('exec', name, 'cat', '/data/bootstrap-token')
     request('/docs/api/auth/bootstrap', {'username': 'admin', 'password': password, 'secret': token})
     request('/docs/api/auth/login', {'username': 'admin', 'password': password})
+    admin = request('/docs/admin').decode()
+    assert '<dialog' not in admin
+    assert 'wiki-admin' in admin
     session = json.loads(request('/docs/api/editor/session'))
     assert session['writable']
     page = json.loads(request('/docs/api/editor/pages?path=_index.md'))

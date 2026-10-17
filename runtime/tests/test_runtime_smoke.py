@@ -4,11 +4,15 @@ import json
 import os
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 @unittest.skipUnless(shutil.which('hugo'), 'Hugo is required for the runtime smoke test')
@@ -26,6 +30,17 @@ class RuntimeSmokeTest(unittest.TestCase):
                 with TestClient(api.app, base_url=api.ORIGIN + '/') as client:
                     self.assertEqual(client.get('/docs/').status_code, 200)
                     self.assertEqual(client.get('/healthz').status_code, 200)
+                    system = api.LIVE.current / 'system-pages'
+                    for page_name in ('login.en.html', 'login.ru.html', 'admin.en.html', 'admin.ru.html'):
+                        self.assertTrue((system / page_name).is_file())
+                    for path in ('/docs/wiki-system.json', '/docs/site/wiki-system.json', '/docs/system-pages/login.en.html'):
+                        self.assertEqual(client.get(path).status_code, 404, path)
+                    system_assets = json.loads((system / 'public-assets.json').read_text())
+                    self.assertTrue(system_assets)
+                    for path in system_assets:
+                        self.assertEqual(client.get('/docs' + path).status_code, 200, path)
+                    self.assertEqual(client.get('/docs/login').status_code, 200)
+                    self.assertEqual(client.get('/docs/admin', follow_redirects=False).status_code, 303)
                     competitor = type(api.LIVE)(api.LIVE.services, root=api.LIVE.root, template=api.LIVE.template)
                     with self.assertRaisesRegex(RuntimeError, 'exactly one writer'):
                         competitor.start()
@@ -35,6 +50,7 @@ class RuntimeSmokeTest(unittest.TestCase):
                     self.assertEqual(response.status_code, 200, response.text)
                     login = client.post('/docs/api/auth/login', json={'username': 'admin', 'password': 'testing-password'}, headers=origin)
                     self.assertEqual(login.status_code, 200, login.text)
+                    self.assertEqual(client.get('/docs/admin').status_code, 200)
                     headers = dict(origin, **{'X-CSRF-Token': login.json()['csrf_token']})
                     encoded = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII='
                     uploaded = client.post('/docs/api/editor/uploads', json={'name': 'pixel.png', 'content': encoded}, headers=headers)

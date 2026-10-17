@@ -11,6 +11,7 @@
     {{ partial "content/head.html" . }}
     {{ $style := resources.Get "docs.css" | minify | fingerprint }}
     <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}" />
+    {{ partial "docs/typography.html" . }}
     {{ $script := resources.Get "docs.js" | minify | fingerprint }}
     <script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}" defer></script>
     {{ partial "docs/editor-head.html" . }}

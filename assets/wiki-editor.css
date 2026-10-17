@@ -75,26 +75,10 @@ body.wiki-editing .wiki-tree-rename { display: grid; place-items: center; }
 body.wiki-editing .wiki-tree-row .wiki-tree-rename-input { flex: 1; min-width: 0; width: 0; padding: 3px 5px; border: 1px solid var(--blue); border-radius: 3px; background: var(--paper, #fff); color: var(--ink); font: inherit; cursor: text !important; user-select: text; -webkit-user-select: text; }
 @media (hover: none) { body.wiki-editing .wiki-tree-rename { opacity: 1; } }
 .wiki-account-toggle { position: fixed; inset-block-end: 12px; inset-inline-end: 16px; z-index: 15; border: 0; background: var(--paper, #fff); color: var(--muted); font: 13px var(--ui); cursor: pointer; padding: 8px; }
-.wiki-account { max-width: min(640px, calc(100vw - 32px)); width: 100%; max-height: calc(100dvh - 32px); box-sizing: border-box; overflow: auto; padding: 24px; color: var(--ink); background: var(--paper, #fff); border: 1px solid var(--rule); border-radius: 4px; font: 16px/1.5 var(--ui); }
-.wiki-account::backdrop { background: #0006; }
-.wiki-account-header, .wiki-account-user { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.wiki-account-header { justify-content: space-between; }
-.wiki-account h2 { margin: 0; font-size: 20px; }
-.wiki-account form { display: grid; gap: 12px; margin-block: 20px; }
-.wiki-account label { display: grid; gap: 4px; }
-.wiki-account input, .wiki-account select, .wiki-account button { min-width: 0; box-sizing: border-box; font: inherit; color: inherit; background: var(--paper, #fff); border: 1px solid var(--rule); border-radius: 3px; padding: 8px 10px; }
-.wiki-account button { cursor: pointer; }
-.wiki-account button:hover { background: var(--rule); }
-.wiki-account button:disabled { opacity: .55; cursor: wait; }
-.wiki-account :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-.wiki-account-user { padding-block: 12px; border-block-end: 1px solid var(--rule); }
-.wiki-account-user span { flex: 1 1 100%; overflow-wrap: anywhere; }
-.wiki-account-user input { flex: 1 1 150px; }
-.wiki-account-status:empty { display: none; }
 .wiki-rich-node { max-width: 100%; overflow-wrap: anywhere; }
 .wiki-rich-node > strong { font: 12px var(--ui); color: var(--muted); margin-inline-end: 8px; }
 .wiki-rich-node > code { white-space: pre-wrap; }
-.wiki-rich-node textarea { display: block; width: 100%; min-height: 90px; box-sizing: border-box; padding: 10px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper, #fff); font: 16px/1.5 monospace; }
+.wiki-rich-node textarea { display: block; width: 100%; min-height: 90px; box-sizing: border-box; padding: 10px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper, #fff); font: 16px/1.5 var(--ui); }
 .wiki-rich-node svg, .wiki-rich-node video { max-width: 100%; }
 .wiki-rich-editor ul[data-type="taskList"] { list-style: none; padding-inline-start: 0; }
 .wiki-rich-editor li[data-type="taskItem"] { display: flex; align-items: baseline; gap: 10px; }

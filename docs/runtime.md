@@ -1,6 +1,6 @@
 # Wiki runtime
 
-The optional runtime adds an inline editor and local accounts to the Hugo theme. Release [v0.2.2](https://github.com/alchemmist/hugo-docs/releases/tag/v0.2.2) provides the public image `ghcr.io/alchemmist/hugo-docs-wiki:0.2.2` and an OCI Helm chart. The regular static theme remains usable without the runtime or editor.
+The optional runtime adds an inline editor and local accounts to the Hugo theme. Release [v0.2.3](https://github.com/alchemmist/hugo-docs/releases/tag/v0.2.3) provides the public image `ghcr.io/alchemmist/hugo-docs-wiki:0.2.3` and an OCI Helm chart. The regular static theme remains usable without the runtime or editor.
 
 ## Run locally
 
@@ -40,7 +40,7 @@ Roles apply to the entire wiki:
 | Editor | Reader access plus content and tree editing and publication |
 | Administrator (`admin`) | Editor access plus creating, disabling, assigning roles and resetting passwords for users |
 
-The account control provides sign-in, sign-out and password change. Administrators also see user management there. Usernames are case-insensitive and need not be email addresses. Passwords must contain at least eight characters and are stored as Argon2 hashes. Sessions are persisted in SQLite and expire after eight hours. Password reset, disabling an account and role changes revoke its sessions. The final enabled administrator cannot be disabled or demoted through user management.
+The account link opens the full `/admin` page with password changes and sign-out. Administrators also manage users there; anonymous visitors use `/login`. Usernames are case-insensitive and need not be email addresses. Passwords must contain at least eight characters and are stored as Argon2 hashes. Sessions are persisted in SQLite and expire after eight hours. Password reset, disabling an account and role changes revoke its sessions. The final enabled administrator cannot be disabled or demoted through user management.
 
 Reading is public by default; local accounts are still required for editing. Start with `WIKI_PUBLIC=false docker compose -f compose.wiki.yaml up -d --no-build` to require login for reading too. The backend enforces access for content, search, media and API requests. A hidden editing button is not an access-control boundary.
 
@@ -70,7 +70,20 @@ Principal environment overrides are `PUBLIC_ORIGIN`, `WIKI_PUBLIC`, `WIKI_DATA_D
 
 For `/docs/` hosting, use `WIKI_URL=https://docs.example.org/docs` and preserve the prefix when forwarding requests. The runtime strips its configured prefix internally; the proxy must not strip it a second time. Links, editor APIs and session cookie paths use that prefix. `/healthz` is the runtime health endpoint.
 
-Branding, language and rendering remain ordinary Hugo settings in `runtime-site/hugo.toml`. Change that template and rebuild the image for a customized installation. Keep executable templates and dependencies in the image; the runtime-managed content belongs on the volume. Set `defaultContentLanguage` to `en` or `ru` for the corresponding theme/editor/account interface. The standalone login screen selects English or Russian from the browser’s `Accept-Language` header. Runtime editing supports one content language per instance; normal static Hugo use is not restricted to that model.
+Branding, language and rendering remain ordinary Hugo settings in `runtime-site/hugo.toml`. Change that template and rebuild the image for a customized installation. Keep executable templates and dependencies in the image; the runtime-managed content belongs on the volume. Set `defaultContentLanguage` to `en` or `ru` for the corresponding theme/editor/account interface. Login and account pages use that same site language. Runtime editing supports one content language per instance; normal static Hugo use is not restricted to that model.
+
+Custom monospace fonts apply consistently to navigation, controls, code and account pages. Supply local WOFF2 files through the site or the chart's `staticBinaryFiles`, then configure:
+
+```toml
+[params.content.typography]
+monoFamily = 'My Mono'
+monoRegular = 'fonts/my-mono.regular.woff2'
+monoBold = 'fonts/my-mono.bold.woff2'
+monoItalic = 'fonts/my-mono.italic.woff2'
+monoBoldItalic = 'fonts/my-mono.bold-italic.woff2'
+```
+
+Use content-hashed font filenames for immutable caching. The regular face is preloaded and account pages reuse the wiki's exact asset URLs. Serif article text and headings retain their existing typography.
 
 ## Editing and publication
 
@@ -98,10 +111,10 @@ External edits should go through the remote workflow, not directly into the runn
 
 Run exactly one worker and one writable runtime replica for each volume. The image uses one Uvicorn worker; a filesystem lock prevents a second local writer. It is not a distributed multi-writer service. The image runs as UID/GID 1000, so bind-mounted storage and secret files must be readable/writable as appropriate by that identity.
 
-The published chart is `oci://ghcr.io/alchemmist/charts/wiki`, version `0.2.2`; its source is in `charts/wiki/`. Download it with:
+The published chart is `oci://ghcr.io/alchemmist/charts/wiki`, version `0.2.3`; its source is in `charts/wiki/`. Download it with:
 
 ```sh
-helm pull oci://ghcr.io/alchemmist/charts/wiki --version 0.2.2
+helm pull oci://ghcr.io/alchemmist/charts/wiki --version 0.2.3
 ```
 
 Its deployment uses one replica and `Recreate`; pin an image digest for production, provide a bootstrap Secret with key `token`, and configure a persistent claim. Optional Git SSH Secrets contain `id_ed25519` and `known_hosts`. Test your configured release on a restored copy before upgrading an existing installation.

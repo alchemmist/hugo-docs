@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 
@@ -32,9 +33,28 @@ with tempfile.TemporaryDirectory() as directory:
     spec = deployment['spec']['template']['spec']
     volume = next(item for item in spec['volumes'] if item['name'] == 'static')
     assert volume['configMap']['items'] == [{'key': key, 'path': 'images/team.svg'}]
-    assert any(item['mountPath'] == '/opt/wiki/static' and item['readOnly'] for item in spec['containers'][0]['volumeMounts'])
+    mounts = [item for item in spec['containers'][0]['volumeMounts'] if item['name'] == 'static']
+    assert mounts == [{'name': 'static', 'mountPath': '/opt/wiki/static/images/team.svg', 'subPath': 'images/team.svg', 'readOnly': True}]
+    site = Path(directory) / 'site'
+    source = site / 'static'
+    projected = source / '..data' / 'images'
+    projected.mkdir(parents=True)
+    (projected / 'team.svg').write_text(logo)
+    (source / 'images').symlink_to('..data/images')
+    (site / 'hugo.toml').write_text("baseURL = 'https://wiki.example/'\n")
+    output = Path(directory) / 'public'
+    hugo = ['hugo', '--source', str(site), '--destination', str(output), '--quiet']
+    subprocess.run(hugo, check=True, capture_output=True)
+    assert not (output / 'images/team.svg').exists()
+    (source / 'images').unlink()
+    for mount in mounts:
+        destination = source / Path(mount['mountPath']).relative_to('/opt/wiki/static')
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source / '..data' / mount['subPath'], destination)
+    subprocess.run(hugo, check=True, capture_output=True)
+    assert (output / 'images/team.svg').read_text() == logo
     for invalid in ['../logo.svg', '/logo.svg', 'images/../../logo.svg', 'images//logo.svg', 'images\\logo.svg', '.hidden/logo.svg']:
         values.write_text(json.dumps({**base, 'staticFiles': {invalid: logo}}))
         result = subprocess.run(command, capture_output=True, text=True)
         assert result.returncode != 0, invalid
-print('Wiki chart checks passed: static asset mapping and unsafe-path rejection')
+print('Wiki chart checks passed: static asset mapping, Hugo ConfigMap projection regression and unsafe-path rejection')

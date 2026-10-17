@@ -60,9 +60,10 @@ spec:
               value: /run/secrets/git/known_hosts
             {{- end }}
           volumeMounts:
-            {{- if .Values.staticFiles }}
+            {{- range $path, $content := .Values.staticFiles }}
             - name: static
-              mountPath: /opt/wiki/static
+              mountPath: {{ printf "/opt/wiki/static/%s" $path | quote }}
+              subPath: {{ $path | quote }}
               readOnly: true
             {{- end }}
             - name: config

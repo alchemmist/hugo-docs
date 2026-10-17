@@ -80,7 +80,7 @@ jobs:
       - uses: azure/setup-helm@v4.3.0
       - run: |
           printf '%s' "$REGISTRY_TOKEN" | helm registry login ghcr.io --username "$REGISTRY_USER" --password-stdin
-          sed -i "s/tag: \"0.2.0\"/tag: \"${VERSION}\"/" charts/wiki/values.yaml
+          sed -i "s/^  tag: .*/  tag: \"${VERSION}\"/" charts/wiki/values.yaml
           helm package charts/wiki --version "$VERSION" --app-version "$VERSION" --destination /tmp/charts
           helm push "/tmp/charts/wiki-${VERSION}.tgz" "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/charts"
         env:

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Mount chart-provided static files individually so Hugo publishes logos and other assets from Kubernetes ConfigMaps.
+- Check projected-volume behavior with a real Hugo build and keep release image tags independent of earlier chart versions.
+
 ## 0.2.0
 
 - Add an optional persistent wiki runtime alongside the static Hugo theme.

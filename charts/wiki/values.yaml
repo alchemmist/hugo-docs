@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/alchemmist/hugo-docs-wiki
-  tag: "0.2.0"
+  tag: "0.2.1"
   digest: ""
   pullPolicy: IfNotPresent
 imagePullSecrets: []

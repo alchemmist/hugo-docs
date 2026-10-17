@@ -1,6 +1,14 @@
 # Changelog
 
+## 0.2.2
+
+- Build browser assets and Hugo templates on the native builder platform. This avoids the ARM64 Node/npm illegal-instruction crash under QEMU that stalled the previous multiarchitecture release.
+- Limit release jobs to 20 minutes and retain architecture-specific final runtime images.
+- Include the per-file ConfigMap mounts from 0.2.1 so Kubernetes logos and favicons are published by Hugo.
+
 ## 0.2.1
+
+The source tag exists, but image and chart artifacts were not published: the release build was canceled after the ARM64 frontend crashed under QEMU. Use 0.2.2.
 
 - Mount chart-provided static files individually so Hugo publishes logos and other assets from Kubernetes ConfigMaps.
 - Check projected-volume behavior with a real Hugo build and keep release image tags independent of earlier chart versions.

@@ -1,11 +1,11 @@
-FROM node:22.16.0-alpine AS frontend
+FROM --platform=$BUILDPLATFORM node:22.16.0-alpine AS frontend
 WORKDIR /src
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY editor ./editor
 RUN npm run build
 
-FROM ghcr.io/gohugoio/hugo:v0.167.0 AS template
+FROM --platform=$BUILDPLATFORM ghcr.io/gohugoio/hugo:v0.167.0 AS template
 USER root
 WORKDIR /src
 COPY go.mod go.sum hugo.toml ./

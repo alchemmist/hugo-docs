@@ -8,6 +8,7 @@ const paths = {
   ordered: 'M10 6h11M10 12h11M10 18h11M3 4h1v5M3 9h3M2 14c0-3 4-3 4 0 0 2-4 3-4 5h4',
   task: 'M10 6h11M10 12h11M10 18h11M2 6l2 2 3-4M2 12l2 2 3-4M2 18l2 2 3-4',
   link: 'M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2',
+  inlineCode: 'M8 7l-5 5 5 5M16 7l5 5-5 5',
   code: 'M8 6l-6 6 6 6M16 6l6 6-6 6M14 4l-4 16',
   table: 'M3 4h18v16H3zM3 9h18M3 14h18M9 4v16M15 4v16',
   media: 'M3 3h18v18H3zM3 17l6-6 4 4 3-3 5 5M15 7h.01',

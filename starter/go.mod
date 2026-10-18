@@ -2,4 +2,4 @@ module example.com/my-docs
 
 go 1.23.0
 
-require github.com/alchemmist/hugo-docs v0.3.2
+require github.com/alchemmist/hugo-docs v0.3.3

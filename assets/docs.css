@@ -115,6 +115,8 @@ main:focus { outline: none; }
 .document .hc-content :is(h4,h5,h6) { margin: 1.5rem 0 0.5rem; }
 .document .hc-content .link { font-size: 0.85em; opacity: 0.45; text-decoration: none; }
 .document .hc-content .link:hover { opacity: 1; }
+.document .hc-content :not(pre) > code { font-family: var(--hc-font-code); font-weight: inherit; font-style: inherit; background: transparent; color: inherit; padding: 0; margin: 0; border: 0; border-radius: 0; box-shadow: none; font-size: inherit; line-height: inherit; }
+.document .hc-content :not(pre) > code * { font-family: inherit; font-size: inherit; color: inherit; background: transparent; }
 .document .hc-content pre code { font-size: 14px; line-height: 1.5; box-shadow: none; padding: 18px 20px; border-radius: 3px; }
 .document .hc-content pre code * { font-size: 1em; }
 .document .hc-content :is(p,li,blockquote) code * { font-size: inherit; }

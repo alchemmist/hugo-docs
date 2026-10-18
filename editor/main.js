@@ -93,7 +93,8 @@ function initialize(session) {
         toggle('heading2','Heading 2','toggleHeading','heading',{level:2}),
         toggle('heading3','Heading 3','toggleHeading','heading',{level:3}),
         toggle('bold','Жирный','toggleBold','bold'),
-        toggle('italic','Курсив','toggleItalic','italic')
+        toggle('italic','Курсив','toggleItalic','italic'),
+        toggle('inlineCode','Моноширинный','toggleCode','code')
       ]},
       {label:'Lists', actions:[
         toggle('bullet','Список','toggleBulletList','bulletList'),

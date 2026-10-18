@@ -1,3 +1,4 @@
+import Code from '@tiptap/extension-code';
 import StarterKit from '@tiptap/starter-kit';
 import { TableKit } from '@tiptap/extension-table';
 import Image from '@tiptap/extension-image';
@@ -25,7 +26,7 @@ const MediaImage = Image.extend({
   },
 });
 
-export const extensions = () => [StarterKit.configure({link: {openOnClick: false, autolink: false}}), TableKit.configure({table: {resizable: false}}), MediaImage.configure({inline: true, allowBase64: false}), TaskList, TaskItem.configure({nested: true}), ...pluginExtensions(), Markdown];
+export const extensions = () => [Code.extend({excludes:'',priority:99}), StarterKit.configure({code:false, link: {openOnClick: false, autolink: false}}), TableKit.configure({table: {resizable: false}}), MediaImage.configure({inline: true, allowBase64: false}), TaskList, TaskItem.configure({nested: true}), ...pluginExtensions(), Markdown];
 
 export function prepareMarkdown(source) {
   const refs = new Map();

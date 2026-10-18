@@ -149,7 +149,7 @@ main:focus { outline: none; }
 .page-outline ul ul { padding-left: 12px; margin: 3px 0; }
 .page-outline a { display: block; color: var(--muted); padding: 5px 0; text-decoration: none; }
 .page-outline a:hover { color: var(--blue); text-decoration: underline; }
-.page-outline a[aria-current] { color: var(--ink); font-weight: 600; }
+.page-outline a[aria-current] { color: var(--ink); font-weight: 400; font-style: italic; }
 .mobile-header, .mobile-outline, .nav-backdrop { display: none; }
 
 #search-dialog { width: min(640px, calc(100vw - 32px)); max-height: min(680px, calc(100dvh - 64px)); padding: 0; border: 1px solid #bbb; border-radius: 6px; color: var(--ink); background: #fff; margin: min(15vh, 120px) auto auto; }

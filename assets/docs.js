@@ -1,6 +1,6 @@
 (() => {
   const ui = JSON.parse(document.body.dataset.ui);
-  const treeKey = `hugo-docs:${document.body.dataset.siteKey}:tree`;
+  const treeState = window.WikiTreeState;
   const sidebar = document.getElementById("sidebar");
   const menuButton = document.getElementById("menu-toggle");
   const backdrop = document.querySelector(".nav-backdrop");
@@ -25,23 +25,18 @@
   mobile.addEventListener("change", () => setNavigation(false, false));
   setNavigation(false, false);
 
-  let savedTree = {};
-  try { savedTree = JSON.parse(localStorage.getItem(treeKey) || "{}"); } catch {}
-  if (!savedTree || typeof savedTree !== "object") savedTree = {};
   for (const button of document.querySelectorAll(".tree-toggle")) {
     const target = document.getElementById(button.getAttribute("aria-controls"));
-    const branch = button.closest(".nav-item").hasAttribute("data-current-branch");
     const update = (open) => {
       button.setAttribute("aria-expanded", String(open));
       button.setAttribute("aria-label", `${open ? ui.collapseFolder : ui.expandFolder} ${button.dataset.title}`);
       target.hidden = !open;
     };
-    if (!branch && typeof savedTree[button.dataset.section] === "boolean") update(savedTree[button.dataset.section]);
+    update(treeState.get(button.dataset.section, button.getAttribute("aria-expanded") === "true"));
     button.addEventListener("click", () => {
       const open = button.getAttribute("aria-expanded") !== "true";
       update(open);
-      savedTree[button.dataset.section] = open;
-      try { localStorage.setItem(treeKey, JSON.stringify(savedTree)); } catch {}
+      treeState.set(button.dataset.section, open);
     });
   }
 

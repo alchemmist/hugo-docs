@@ -328,3 +328,56 @@ test('tree controls follow English page language', async () => {
   assert.ok(document.querySelector('[aria-label="Expand AI"]'));
   document.documentElement.lang = 'ru';
 });
+
+test('hydration preserves open unrelated branches and explicitly closed current ancestors',async()=>{
+  const dom=new JSDOM('<nav class="page-tree"><ul class="nav-root"><li><button class="tree-toggle" data-section="/ai" aria-expanded="false">AI</button></li><li><button class="tree-toggle" data-section="/other" aria-expanded="true">Other</button></li></ul></nav>',{url:'https://wiki.example/'});
+  globalThis.document=dom.window.document;
+  const data=fixture();data.nodes.push({id:'other',title:'Other',kind:'folder',children:[{id:'other/a.md',title:'A',kind:'page',url:'/other/a/'}]});
+  const controller=await initializeTree({api:async()=>data,dirty:()=>false,currentPath:()=> 'ai/chat.md',message:()=>{}});
+  await controller.ready;
+  assert.equal(document.querySelector('[data-section="ai"]').getAttribute('aria-expanded'),'false');
+  assert.equal(document.querySelector('[data-section="other"]').getAttribute('aria-expanded'),'true');
+  controller.render();
+  assert.equal(document.querySelector('[data-section="other"]').getAttribute('aria-expanded'),'true');
+});
+
+test('pending hydration reads the latest static toggles and shared preferences',async()=>{
+  const dom=new JSDOM('<nav class="page-tree"><ul class="nav-root"><li><button class="tree-toggle" data-section="/ai" aria-expanded="true">AI</button></li></ul></nav>',{url:'https://wiki.example/'});
+  globalThis.document=dom.window.document;
+  const preferences=new Map();const normalize=id=>id.replace(/^\/+|\/+$/g,'');
+  dom.window.WikiTreeState={normalize,get:(id,fallback)=>preferences.get(normalize(id))??fallback,set:(id,value)=>preferences.set(normalize(id),value)};
+  let resolve;const controller=await initializeTree({api:()=>new Promise(done=>{resolve=done;}),dirty:()=>false,currentPath:()=> 'ai/chat.md',message:()=>{}});
+  document.querySelector('.tree-toggle').setAttribute('aria-expanded','false');
+  preferences.set('ai',false);
+  resolve(fixture());await controller.ready;
+  const toggle=document.querySelector('[data-section="ai"]');
+  assert.equal(toggle.getAttribute('aria-expanded'),'false');
+  toggle.click();
+  assert.equal(preferences.get('ai'),true);
+});
+
+test('rerender atomically replaces the tree while preserving scroll and focused folder',async()=>{
+  const state=await setup();const nav=document.querySelector('.page-tree');
+  nav.scrollTop=87;document.querySelector('.tree-toggle').focus();
+  const records=[];const observer=new state.dom.window.MutationObserver(items=>records.push(...items));observer.observe(nav,{childList:true});
+  state.controller.render();await tick();observer.disconnect();
+  assert.equal(nav.scrollTop,87);
+  assert.equal(document.activeElement.dataset.section,'ai');
+  assert.equal(records.length,1);
+  assert.equal(records[0].removedNodes.length,1);
+  assert.equal(records[0].addedNodes.length,1);
+});
+
+test('hydration persists default open ancestors without storing default closed branches',async()=>{
+  const dom=new JSDOM('<nav class="page-tree"><ul class="nav-root"></ul></nav>',{url:'https://wiki.example/'});
+  globalThis.document=dom.window.document;
+  const preferences=new Map();const normalize=id=>id.replace(/^\/+|\/+$/g,'');
+  dom.window.WikiTreeState={normalize,get:(id,fallback)=>preferences.get(normalize(id))??fallback,set:(id,value)=>preferences.set(normalize(id),value)};
+  const data=fixture();data.nodes.push({id:'other',title:'Other',kind:'folder',children:[]});
+  const controller=await initializeTree({api:async()=>data,dirty:()=>false,currentPath:()=> 'ai/chat.md',message:()=>{}});
+  await controller.ready;controller.render();
+  assert.equal(preferences.get('ai'),true);
+  assert.equal(preferences.has('other'),false);
+  document.querySelector('[data-section="ai"]').click();
+  assert.equal(preferences.get('ai'),false);
+});

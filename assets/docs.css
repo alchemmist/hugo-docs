@@ -156,21 +156,21 @@ main:focus { outline: none; }
 #search-dialog::backdrop { background: rgb(0 0 0 / 22%); }
 .search-panel { padding: 22px 24px 16px; }
 .search-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
-.search-head h2 { margin: 0; font-size: 14px; font-weight: 500; }
+.search-head h2 { margin: 0; font-size: 13px; font-weight: 500; }
 .icon-button { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 3px; background: transparent; color: var(--muted); }
 .icon-button:hover { background: #f1f1f1; color: var(--ink); }
 .search-field { display: flex; align-items: center; gap: 12px; border: 1px solid #aaa; border-radius: 3px; padding: 12px; }
 .search-field:focus-within { outline: 2px solid var(--blue); outline-offset: 1px; }
 .search-field > .icon { color: var(--muted); width: 18px; height: 18px; }
-.search-field input { border: 0; outline: 0; width: 100%; background: transparent; color: var(--ink); font-size: 14px; }
+.search-field input { border: 0; outline: 0; width: 100%; background: transparent; color: var(--ink); font-size: 13px; }
 .search-field input::placeholder { color: var(--muted); }
 #search-status { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 18px 0 12px; }
 #search-results { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; }
 #search-results li + li { border-top: 1px solid var(--rule); }
 .search-result { display: block; padding: 14px 10px; text-decoration: none; color: var(--ink); border-radius: 3px; }
-.search-result-title { display: block; font-size: 14px; font-weight: 500; }
+.search-result-title { display: block; font-size: 13px; font-weight: 500; }
 .search-result-path { display: block; font-size: 10px; color: var(--muted); margin-bottom: 6px; }
-.search-result-excerpt { display: block; font-family: var(--prose); font-size: 17px; line-height: 1.45; color: #555; margin-top: 7px; }
+.search-result-excerpt { display: block; font-family: var(--prose); font-size: 15px; line-height: 1.45; color: #555; margin-top: 7px; }
 #search-results [aria-selected="true"] .search-result, .search-result:hover { background: #f2f2f2; }
 .search-result mark { background: #e3eaff; color: var(--ink); }
 .search-help { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; padding-top: 13px; border-top: 1px solid var(--rule); font-size: 10px; color: var(--muted); }

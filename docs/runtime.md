@@ -1,6 +1,6 @@
 # Wiki runtime
 
-The optional runtime adds an inline editor and local accounts to the Hugo theme. Release [v0.3.4](https://github.com/alchemmist/hugo-docs/releases/tag/v0.3.4) provides the public image `ghcr.io/alchemmist/hugo-docs-wiki:0.3.4` and an OCI Helm chart. The regular static theme remains usable without the runtime or editor.
+The optional runtime adds an inline editor and local accounts to the Hugo theme. Release [v0.3.5](https://github.com/alchemmist/hugo-docs/releases/tag/v0.3.5) provides the public image `ghcr.io/alchemmist/hugo-docs-wiki:0.3.5` and an OCI Helm chart. The regular static theme remains usable without the runtime or editor.
 
 ## Run locally
 
@@ -117,10 +117,10 @@ External edits should go through the remote workflow, not directly into the runn
 
 Run exactly one worker and one writable runtime replica for each volume. The image uses one Uvicorn worker; a filesystem lock prevents a second local writer. It is not a distributed multi-writer service. The image runs as UID/GID 1000, so bind-mounted storage and secret files must be readable/writable as appropriate by that identity.
 
-The published chart is `oci://ghcr.io/alchemmist/charts/wiki`, version `0.3.4`; its source is in `charts/wiki/`. Download it with:
+The published chart is `oci://ghcr.io/alchemmist/charts/wiki`, version `0.3.5`; its source is in `charts/wiki/`. Download it with:
 
 ```sh
-helm pull oci://ghcr.io/alchemmist/charts/wiki --version 0.3.4
+helm pull oci://ghcr.io/alchemmist/charts/wiki --version 0.3.5
 ```
 
 Its deployment uses one replica and `Recreate`; pin an image digest for production, provide a bootstrap Secret with key `token`, and configure a persistent claim. Optional Git SSH Secrets contain `id_ed25519` and `known_hosts`. Test your configured release on a restored copy before upgrading an existing installation.

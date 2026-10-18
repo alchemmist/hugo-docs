@@ -18,5 +18,10 @@ test('opening an existing page finishes loading with an enabled Publish action',
   assert.equal(document.querySelector('[data-editor-save]').textContent,'Publish');
   assert.equal(document.querySelector('[data-editor-save]').disabled,false);
   assert.equal(document.querySelector('.wiki-editbar').getAttribute('aria-busy'),'false');
+  const inline = document.querySelector('[data-format="inlineCode"]');
+  assert.equal(inline.getAttribute('aria-label'),'Monospace');
+  assert.equal(inline.getAttribute('aria-pressed'),'false');
+  assert.ok(inline.querySelector('svg path').getAttribute('d'));
+  assert.notEqual(inline.querySelector('svg path').getAttribute('d'),document.querySelector('[data-format="code"] svg path').getAttribute('d'));
   dom.window.close();
 });

@@ -197,3 +197,70 @@ test('disabling a user refreshes the status and action', async () => {
   assert.equal(root.querySelector('.wiki-admin-user-actions button').textContent,'Enable');
   assert.ok(calls.some(call=>call.options.method === 'PATCH'));
 });
+
+test('theme preference is available to every signed-in role without changing server-rendered theme', async () => {
+  for (const role of ['reader','editor','admin']) {
+    const {root}=setup(role, path => path.endsWith('/session') ? {user:{username:'alice',role,theme:'dark'},csrf_token:'csrf'} : undefined);
+    document.documentElement.dataset.theme='dark';
+    await mountAdmin(root);
+    const control=root.querySelector('#admin-account .wiki-theme-preference select');
+    assert.equal(control.value,'dark');
+    assert.equal(control.parentElement.tagName,'LABEL');
+    assert.equal(control.parentElement.firstChild.textContent,'Theme');
+    assert.equal(document.documentElement.dataset.theme,'dark');
+    assert.equal(root.querySelectorAll('[name=theme]').length,1);
+    assert.equal(document.defaultView.localStorage.length,0);
+    assert.equal(document.cookie,'');
+  }
+});
+
+test('anonymous visits do not render appearance controls', async () => {
+  const {root}=setup(null);
+  await mountAdmin(root,()=>{});
+  assert.equal(root.querySelector('.wiki-theme-preference'),null);
+});
+
+test('reader saves own theme with CSRF and waits for confirmation before applying it', async () => {
+  const {root,calls}=setup('reader');
+  document.documentElement.dataset.theme='light';
+  const session=await mountAdmin(root);
+  const select=root.querySelector('[name=theme]');
+  let complete;
+  globalThis.fetch=async(path,options)=>{
+    calls.push({path,options});
+    return {ok:true,json:()=>new Promise(resolve=>{complete=resolve;})};
+  };
+  select.value='dark';select.dispatchEvent(new document.defaultView.Event('change'));
+  await tick();
+  assert.equal(select.disabled,true);
+  assert.equal(document.documentElement.dataset.theme,'light');
+  const call=calls.at(-1);
+  assert.equal(call.path,'/docs/api/auth/preferences');
+  assert.equal(call.options.method,'POST');
+  assert.equal(call.options.headers['X-CSRF-Token'],'csrf');
+  assert.equal(call.options.credentials,'same-origin');
+  assert.deepEqual(JSON.parse(call.options.body),{theme:'dark'});
+  complete({theme:'dark'});await tick();
+  assert.equal(document.documentElement.dataset.theme,'dark');
+  assert.equal(session.user.theme,'dark');
+  assert.equal(select.disabled,false);
+  assert.equal(root.querySelector('.wiki-theme-preference [role=status]').textContent,'Saved');
+  assert.equal(document.defaultView.localStorage.length,0);
+  assert.equal(document.cookie,'');
+});
+
+test('theme failures restore the saved choice without changing the applied theme', async () => {
+  for (const response of [{ok:false,json:async()=>({detail:'Forbidden'})},{ok:true,json:async()=>({theme:'unexpected'})}]) {
+    const {root}=setup('reader',path=>path.endsWith('/session') ? {user:{username:'alice',role:'reader',theme:'dark'}} : undefined);
+    document.documentElement.dataset.theme='dark';
+    const session=await mountAdmin(root);
+    globalThis.fetch=async()=>response;
+    const select=root.querySelector('[name=theme]');
+    select.value='light';select.dispatchEvent(new document.defaultView.Event('change'));await tick();
+    assert.equal(select.value,'dark');
+    assert.equal(select.disabled,false);
+    assert.equal(session.user.theme,'dark');
+    assert.equal(document.documentElement.dataset.theme,'dark');
+    assert.ok(root.querySelector('.wiki-theme-preference [role=status]').textContent);
+  }
+});

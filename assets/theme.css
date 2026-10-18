@@ -1,0 +1,83 @@
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #202323;
+  --surface: #272b2b;
+  --raised: #2e3333;
+  --ink: #c9cfcb;
+  --muted: #969f9b;
+  --blue: #a0b5d1;
+  --rule: #3b4340;
+  --control: #75817c;
+  --active: #303b40;
+  background: var(--paper);
+  color: var(--ink);
+}
+html[data-theme="dark"] body { background: var(--paper); }
+html[data-theme="dark"] :is(h1,h2,h3,h4) { color: #d6dcd8; }
+html[data-theme="dark"] :is(.skip-link,.search-trigger,.mobile-header,.sidebar,.wiki-editbar,.wiki-tree-create button,.wiki-tree-create input,.wiki-tree-create select,.wiki-link-form input,.wiki-editbar button) { background: var(--paper); color: var(--ink); border-color: var(--rule); }
+html[data-theme="dark"] :is(.page-description,.search-result-excerpt) { color: #afb8b2; }
+html[data-theme="dark"] :is(.nav-row:has(> a[aria-current]),.home-link[aria-current],.wiki-admin-nav a[aria-current="page"]) { background: var(--active); color: var(--ink); }
+html[data-theme="dark"] :is(.icon-button:hover,.wiki-formatbar button:hover,.wiki-admin-nav a:hover,.search-result:hover,#search-results [aria-selected="true"] .search-result) { background: var(--raised); color: var(--ink); }
+html[data-theme="dark"] :is(.wiki-formatbar button[aria-pressed="true"],[data-drop="inside"]) { background: var(--active); color: var(--blue); }
+html[data-theme="dark"] #search-dialog { background: var(--surface); border-color: #4b5550; color: var(--ink); box-shadow: 0 20px 70px #0005; }
+html[data-theme="dark"] #search-dialog::backdrop { background: #10141499; }
+html[data-theme="dark"] .nav-backdrop { background: #10141488; }
+html[data-theme="dark"] :is(.search-field,.search-help,kbd) { border-color: var(--rule); }
+html[data-theme="dark"] .search-field { border-color: var(--control); background: var(--paper); }
+html[data-theme="dark"] .search-field input { color: var(--ink); }
+html[data-theme="dark"] .search-result mark { background: #3b4c55; color: #dae2e4; }
+html[data-theme="dark"] ::selection, html[data-theme="dark"] .hc-content ::selection { background: #42515b; color: #e0e6e2; }
+html[data-theme="dark"] .document .hc-content {
+  --hc-color-text: #c9cfcb;
+  --hc-color-link: #a0b5d1;
+  --hc-code-background: #272b2b;
+  --c-done: #b8a6c6;
+  --c-success: #9cb99c;
+  --c-danger: #cf9d96;
+  --c-warning: #c6b28b;
+  --c-info: #a0b5d1;
+  --c-muted: #969f9b;
+  --c-text-default: #c9cfcb;
+}
+html[data-theme="dark"] .document .hc-content :is(blockquote,.markdown-blockquote) { color: #afb8b2; border-color: #65736b; }
+html[data-theme="dark"] .document .hc-content :is(pre code,.chroma,.bg) { background: var(--surface); color: var(--ink); box-shadow: none; }
+html[data-theme="dark"] .document .hc-content :is(th,td) { border-color: var(--rule); }
+html[data-theme="dark"] .document .hc-content th { background: var(--surface); }
+html[data-theme="dark"] .document .hc-content :is(.gh-alert.note,.gh-alert.tip,.gh-alert.warning,.gh-alert.important,.gh-alert.caution) { background: var(--surface); color: var(--ink); }
+html[data-theme="dark"] .document .hc-content .gh-alert.note { border-color: #7994af; }
+html[data-theme="dark"] .document .hc-content .gh-alert.tip { border-color: #839d83; }
+html[data-theme="dark"] .document .hc-content .gh-alert.warning { border-color: #a89770; }
+html[data-theme="dark"] .document .hc-content .gh-alert.important { border-color: #a18caf; }
+html[data-theme="dark"] .document .hc-content .gh-alert.caution { border-color: #ad827c; }
+html[data-theme="dark"] .document .hc-content :is(.hc-error,.wiki-editor-error) { color: #cf9d96; }
+html[data-theme="dark"] .document .hc-content .chroma * { color: inherit; background-color: transparent; }
+html[data-theme="dark"] .document .hc-content .chroma :is(.k,.kc,.kd,.kn,.kp,.kr,.kt) { color: #b7a8c7; }
+html[data-theme="dark"] .document .hc-content .chroma :is(.s,.sa,.sb,.sc,.dl,.sd,.s2,.se,.sh,.si,.sx,.sr,.s1,.ss) { color: #abc1a3; }
+html[data-theme="dark"] .document .hc-content .chroma :is(.m,.mb,.mf,.mh,.mi,.il,.mo,.no,.nv,.vc,.vg,.vi,.vm) { color: #cbb793; }
+html[data-theme="dark"] .document .hc-content .chroma :is(.nt,.nb,.nf,.fm,.nd,.ni) { color: #a0b5d1; }
+html[data-theme="dark"] .document .hc-content .chroma :is(.c,.ch,.cm,.c1,.cs,.cp,.cpf,.ln,.lnt) { color: #969f9b; }
+html[data-theme="dark"] .document .hc-content .chroma :is(.err,.gd) { color: #d3aaa4 !important; background: #3e2d2c; }
+html[data-theme="dark"] .document .hc-content .chroma .gi { color: #b0c5ac; background: #2b392e; }
+html[data-theme="dark"] .document .hc-content .chroma .hl { background: #323b39; }
+html[data-theme="dark"] :is(#wiki-admin,#wiki-login) :is(input,select,button) { background: var(--surface); color: var(--ink); border-color: var(--control); }
+html[data-theme="dark"] :is(#wiki-admin,#wiki-login) button:hover { background: var(--raised); border-color: #8a9790; }
+html[data-theme="dark"] :is(#wiki-admin,#wiki-login) input::placeholder { color: var(--muted); }
+html[data-theme="dark"] #wiki-admin .wiki-users-table select { background: transparent; border-color: transparent; }
+html[data-theme="dark"] #wiki-admin .wiki-users-table select:hover { border-color: var(--rule); }
+html[data-theme="dark"] #wiki-admin .wiki-users-table button { color: var(--muted); background: transparent; border: 0; }
+html[data-theme="dark"] #wiki-admin .wiki-users-table button:hover { color: var(--ink); }
+html[data-theme="dark"] .wiki-editbar [data-editor-save] { background: #a0b5d1; color: #20282e; border-color: #a0b5d1; }
+html[data-theme="dark"] :is(.wiki-tree-delete:hover,.wiki-tree-delete:focus-visible,.wiki-tree-delete.is-confirming) { color: #d3aaa4; background: #3e2d2c; }
+
+html[data-theme="dark"] :is(.wiki-new-fields input,.wiki-new-fields select,.wiki-link-form input,.wiki-tree-create input,.wiki-tree-create select,.wiki-rich-node textarea) { background: var(--paper); color: var(--ink); border-color: var(--control); }
+html[data-theme="dark"] :is(.wiki-new-fields input,.wiki-link-form input,.wiki-tree-create input,.search-field input)::placeholder { color: var(--muted); }
+html[data-theme="dark"] .wiki-editor-error { color: #cf9d96; }
+html[data-theme="dark"] .document .hc-content :is(details,hr) { border-color: var(--rule); }
+html[data-theme="dark"] body[data-hc-zoom-active] .medium-zoom-overlay { background: var(--paper) !important; }
+html[data-theme="dark"] .document .hc-content .mermaid :is(.node rect,.node circle,.node ellipse,.node polygon,.node path,.actor,.labelBox,.activation0,.activation1,.activation2) { fill: var(--surface) !important; stroke: var(--control) !important; }
+html[data-theme="dark"] .document .hc-content .mermaid :is(.cluster rect,.note) { fill: var(--raised) !important; stroke: var(--control) !important; }
+html[data-theme="dark"] .document .hc-content .mermaid :is(text,.nodeLabel,.nodeLabel p,.edgeLabel,.edgeLabel p,.label,.label text,.cluster-label,.cluster-label p,.messageText,.noteText,.labelText,.loopText) { fill: var(--ink) !important; color: var(--ink) !important; }
+html[data-theme="dark"] .document .hc-content .mermaid :is(.edgeLabel,.edgeLabel p,.labelBkg) { background: var(--paper) !important; }
+html[data-theme="dark"] .document .hc-content .mermaid .edgeLabel rect { fill: var(--paper) !important; }
+html[data-theme="dark"] .document .hc-content .mermaid :is(.flowchart-link,.actor-line,.messageLine0,.messageLine1,.loopLine,.relation,.transition) { stroke: var(--muted) !important; }
+html[data-theme="dark"] .document .hc-content .mermaid :is(.marker,#arrowhead path,#crosshead path) { fill: var(--muted) !important; stroke: var(--muted) !important; }

@@ -777,10 +777,10 @@ def sync_status():
 
 
 @app.api_route('/site/{path:path}', methods=['GET', 'HEAD'])
-def live_site(path: str):
+def live_site(path: str, request: Request):
     if not LIVE_MODE:
         raise HTTPException(404)
-    return LIVE.file(path)
+    return LIVE.file(path, theme=request.state.auth['user']['theme'] if request.state.auth else 'light')
 
 
 @app.get('/healthz')
@@ -856,7 +856,7 @@ def site(path: str, request: Request):
     if not LIVE_MODE:
         raise HTTPException(404)
     try:
-        return LIVE.file(path)
+        return LIVE.file(path, theme=request.state.auth['user']['theme'] if request.state.auth else 'light')
     except HTTPException as error:
         if error.status_code != 404 or not path.startswith('upload-') or '/' in path or not request.state.auth:
             raise

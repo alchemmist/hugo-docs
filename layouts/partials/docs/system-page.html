@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{{ $style.RelPermalink }}">
   {{ end }}
   {{ partial "docs/typography.html" .page }}
+  {{ partial "docs/theme.html" .page }}
   {{ $script := resources.Get (printf "wiki-%s.js" .surface) | fingerprint }}
   <script src="{{ $script.RelPermalink }}" defer></script>
 </head>

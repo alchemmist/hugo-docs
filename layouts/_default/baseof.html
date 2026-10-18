@@ -17,6 +17,7 @@
     {{ $script := resources.Get "docs.js" | minify | fingerprint }}
     <script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}" defer></script>
     {{ partial "docs/editor-head.html" . }}
+    {{ partial "docs/theme.html" . }}
     {{ partial "docs/head-extra.html" . }}
   </head>
   <body data-site-key="{{ .Site.Home.RelPermalink }}" data-ui="{{ partial "docs/ui.html" . | jsonify }}" data-search-index="{{ with .Site.Home.OutputFormats.Get "SearchIndex" }}{{ .RelPermalink }}{{ end }}">

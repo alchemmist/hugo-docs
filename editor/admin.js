@@ -1,4 +1,5 @@
 import {authError} from './auth-errors.js';
+import {mountMcpTokens} from './mcp-tokens.js';
 
 const words = {
   en: {account:'Account',password:'Password',current:'Current password',next:'New password',change:'Change password',logout:'Sign out',username:'Username',role:'Role',reader:'Reader',editor:'Editor',admin:'Administrator',users:'Users',create:'Create user',disable:'Disable',enable:'Enable',reset:'Reset password',saved:'Saved',failed:'Request failed. Please try again.',loading:'Loading…',retry:'Try again',sync:'Git synchronization',syncDisabled:'Disabled',syncReady:'Up to date',syncPending:'Pending changes',syncError:'Synchronization failed',refresh:'Refresh',empty:'No users',disabled:'Disabled',active:'Active',required:'Enter a new password.'},
@@ -105,6 +106,7 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
     };
     sync.append(action(text.refresh, refresh, message)); await refresh();
   }
+  await mountMcpTokens(root, session, request);
   if (session.user.role !== 'admin') return session;
   const users = section(text.users);
   const list = node('div', '', 'wiki-admin-users'); users.append(list);

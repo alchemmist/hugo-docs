@@ -29,3 +29,20 @@
 .wiki-admin-user .wiki-admin-status { grid-column: 1 / -1; }
 @media (max-width: 480px) { .wiki-admin-user .wiki-admin-form { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 600px) { .wiki-system-shell { padding: 24px 20px; } .wiki-system-header { margin-bottom: 40px; } }
+.wiki-mcp > p, .wiki-mcp-secret > p { font: 14px/1.6 var(--ui); }
+.wiki-mcp-value { display: flex; gap: 12px; align-items: end; margin: 16px 0; }
+.wiki-mcp-value label { flex: 1; min-width: 0; }
+.wiki-mcp-config { margin: 20px 0; font: 14px/1.6 var(--ui); }
+.wiki-mcp-config summary { cursor: pointer; }
+.wiki-mcp-config pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+#wiki-admin .wiki-mcp-checkbox { display: flex; align-items: center; gap: 10px; }
+#wiki-admin .wiki-mcp-checkbox input { width: 16px; min-height: 16px; margin: 0; }
+.wiki-mcp-secret:empty { display: none; }
+.wiki-mcp-secret { margin: 24px 0; }
+#wiki-admin .wiki-mcp > h3 { margin-top: 28px; }
+.wiki-mcp-token { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--rule); }
+.wiki-mcp-token > div { min-width: 0; }
+.wiki-mcp-token h4 { margin: 0; font: 700 14px/1.5 var(--ui); overflow-wrap: anywhere; }
+.wiki-mcp-token p { margin: 6px 0 0; color: var(--muted); font: 13px/1.5 var(--ui); overflow-wrap: anywhere; }
+.wiki-mcp-token button { flex-shrink: 0; }
+@media (max-width: 480px) { .wiki-mcp-value { flex-wrap: wrap; } .wiki-mcp-value label { flex-basis: 100%; } }

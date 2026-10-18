@@ -248,7 +248,7 @@ class AuthTests(unittest.TestCase):
         (replacement / 'public-assets.json').write_text('{}')
         current.unlink()
         current.symlink_to(replacement, target_is_directory=True)
-        self.assertEqual(pages.render('login', 'en', '').body.decode(), '<html>updated</html>')
+        self.assertEqual(pages.render('login', 'en', '').body.decode(), '<html data-theme="light">updated</html>')
         self.assertEqual(pages.assets, {})
 
     def test_invalid_system_asset_manifest_cannot_expose_content(self):

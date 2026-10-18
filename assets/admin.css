@@ -70,3 +70,6 @@
   .wiki-admin-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; margin-top: 24px; }
   .wiki-admin-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px 8px; }
 }
+
+.wiki-theme-preference { margin: 28px 0; max-width: 440px; }
+#wiki-admin .wiki-theme-preference h3 { margin: 0 0 16px; }

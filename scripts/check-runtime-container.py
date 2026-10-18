@@ -82,6 +82,17 @@ try:
     session = json.loads(request('/docs/api/editor/session'))
     assert session['writable']
     csrf = {'X-CSRF-Token': session['csrf_token']}
+    assert json.loads(request('/docs/api/auth/preferences', {'theme': 'dark'}, csrf)) == {'theme': 'dark'}
+    for path in ('/docs/', '/docs/admin'):
+        themed = request(path).decode()
+        assert re.search(r'<html\b[^>]*\bdata-theme="dark"', themed)
+        styles = re.findall(r'href=["\']([^"\']*/theme\.[^"\']+\.css)["\']', themed)
+        assert styles, path
+        for style in styles:
+            assert b'data-theme' in request(style)
+    with urllib.request.urlopen(base + '/docs/', timeout=30) as response:
+        anonymous = response.read().decode()
+        assert re.search(r'<html\b[^>]*\bdata-theme="light"', anonymous)
     personal = json.loads(request('/docs/api/auth/tokens', {'name': 'Container acceptance', 'read_only': True}, csrf))
 
     protocol_version = '2025-11-25'
@@ -132,7 +143,11 @@ try:
     assert b'Container publication acceptance.' in request('/docs/')
     run('restart', name)
     wait_for('/docs/', b'Container publication acceptance.')
-    print('Container acceptance passed: fresh volume, subpath health, public read, bootstrap/login, MCP discovery/read/read-only/revocation, publication, restart persistence')
+    for path in ('/docs/', '/docs/admin'):
+        assert re.search(r'<html\b[^>]*\bdata-theme="dark"', request(path).decode())
+    assert json.loads(request('/docs/api/auth/preferences', {'theme': 'light'}, csrf)) == {'theme': 'light'}
+    assert re.search(r'<html\b[^>]*\bdata-theme="light"', request('/docs/').decode())
+    print('Container acceptance passed: fresh volume, subpath health, public read, bootstrap/login, personal theme and anonymous isolation, MCP discovery/read/read-only/revocation, publication, restart persistence')
 except Exception:
     subprocess.run([args.engine, 'logs', name], check=False)
     raise

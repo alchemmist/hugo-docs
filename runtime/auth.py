@@ -12,6 +12,8 @@ import threading
 import time
 from urllib.parse import urlsplit
 
+from theme import apply_theme
+
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
 from fastapi import HTTPException, Request
@@ -75,20 +77,20 @@ class SystemPages:
             language = None
         return language if language in ('en', 'ru') else login_language(header)
 
-    def render(self, page, language, prefix):
+    def render(self, page, language, prefix, theme='light'):
         try:
             source = self.file(f'{page}.{language}.html').read_text()
         except ValueError as error:
             raise HTTPException(503, 'System pages are unavailable') from error
         nonce = secrets.token_urlsafe(24)
         body = source.replace('__WIKI_BASE_PATH__', html.escape(prefix, quote=True)).replace('__WIKI_NONCE__', nonce)
-        return HTMLResponse(body, headers={
+        return HTMLResponse(apply_theme(body, theme), headers={
             'Cache-Control': 'no-store',
             'Content-Security-Policy': f"default-src 'none'; script-src 'self' 'nonce-{nonce}'; style-src 'self' 'nonce-{nonce}'; font-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
             'Referrer-Policy': 'no-referrer',
             'X-Content-Type-Options': 'nosniff',
             'Content-Language': language,
-            'Vary': 'Accept-Language',
+            'Vary': 'Accept-Language, Cookie',
         })
 
 
@@ -103,6 +105,10 @@ class AuthStore:
                 CREATE TABLE IF NOT EXISTS users (
                     id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE COLLATE NOCASE,
                     password TEXT NOT NULL, role TEXT NOT NULL, disabled INTEGER NOT NULL DEFAULT 0
+                );
+                CREATE TABLE IF NOT EXISTS user_preferences (
+                    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                    theme TEXT NOT NULL CHECK(theme IN ('light', 'dark'))
                 );
                 CREATE TABLE IF NOT EXISTS sessions (
                     token TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),
@@ -143,8 +149,24 @@ class AuthStore:
         if not isinstance(role, str) or role not in ROLES:
             raise HTTPException(422, 'Invalid role')
 
-    def public_user(self, row):
-        return {key: row[key] for key in ('id', 'username', 'role', 'disabled')}
+    def public_user(self, row, db=None):
+        if db is None:
+            with self.connect() as connection:
+                return self.public_user(row, connection)
+        preference = db.execute('SELECT theme FROM user_preferences WHERE user_id=?', (row['id'],)).fetchone()
+        return {**{key: row[key] for key in ('id', 'username', 'role', 'disabled')},
+                'theme': preference['theme'] if preference else 'light'}
+
+    def set_theme(self, user_id, theme):
+        if not isinstance(theme, str) or theme not in ('light', 'dark'):
+            raise HTTPException(422, 'Invalid theme')
+        with self.lock, self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            if not db.execute('SELECT 1 FROM users WHERE id=? AND disabled=0', (user_id,)).fetchone():
+                raise HTTPException(404, 'Active user not found')
+            db.execute('INSERT INTO user_preferences (user_id, theme) VALUES (?, ?) '
+                       'ON CONFLICT(user_id) DO UPDATE SET theme=excluded.theme', (user_id, theme))
+        return {'theme': theme}
 
     def create_user(self, username, password, role='reader', bootstrap=False):
         self.validate(username, password, role)
@@ -159,11 +181,11 @@ class AuthStore:
                            (user_id, username.strip(), password_hash, role))
             except sqlite3.IntegrityError as error:
                 raise HTTPException(409, 'Username already exists') from error
-            return self.public_user(db.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone())
+            return self.public_user(db.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone(), db)
 
     def list_users(self):
         with self.connect() as db:
-            return [self.public_user(row) for row in db.execute('SELECT * FROM users ORDER BY username')]
+            return [self.public_user(row, db) for row in db.execute('SELECT * FROM users ORDER BY username')]
 
     def login(self, username, password):
         if not isinstance(username, str) or not isinstance(password, str) or len(password) > 1024:
@@ -183,7 +205,7 @@ class AuthStore:
             db.execute('DELETE FROM sessions WHERE expires <= ?', (time.time(),))
             db.execute('INSERT INTO sessions VALUES (?, ?, ?, ?)',
                        (self.digest(token), row['id'], csrf, time.time() + self.session_seconds))
-            return token, {'user': self.public_user(row), 'csrf_token': csrf}
+            return token, {'user': self.public_user(row, db), 'csrf_token': csrf}
 
     def digest(self, token):
         return hashlib.sha256(token.encode()).hexdigest()
@@ -195,7 +217,7 @@ class AuthStore:
             row = db.execute('SELECT users.*, sessions.csrf FROM sessions JOIN users ON users.id=sessions.user_id '
                              'WHERE sessions.token=? AND sessions.expires>? AND users.disabled=0',
                              (self.digest(token), time.time())).fetchone()
-            return {'user': self.public_user(row), 'csrf_token': row['csrf']} if row else None
+            return {'user': self.public_user(row, db), 'csrf_token': row['csrf']} if row else None
 
     def logout(self, token):
         with self.connect() as db:
@@ -247,7 +269,7 @@ class AuthStore:
                 'JOIN users ON users.id=api_tokens.user_id '
                 'WHERE api_tokens.token_hash=? AND api_tokens.expires_at>? AND users.disabled=0',
                 (self.digest(raw), time.time())).fetchone()
-            return {'user': self.public_user(row), 'token_id': row['token_id'],
+            return {'user': self.public_user(row, db), 'token_id': row['token_id'],
                     'read_only': bool(row['read_only'])} if row else None
 
     def update_user(self, user_id, *, role=None, disabled=None, password=None):
@@ -272,7 +294,7 @@ class AuthStore:
                        (next_role, next_disabled, PASSWORD_HASHER.hash(password) if password is not None else row['password'], user_id))
             db.execute('DELETE FROM sessions WHERE user_id=?', (user_id,))
             db.execute('DELETE FROM api_tokens WHERE user_id=?', (user_id,))
-            return self.public_user(db.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone())
+            return self.public_user(db.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone(), db)
 
 
 def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_secret='', session_seconds=28800, system_pages_dir=None, mcp_enabled=False):
@@ -365,7 +387,7 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
         admin_route = path == '/api/admin' or path.startswith('/api/admin/')
         allowed_public = path in ('/healthz', '/login', '/login/') or auth_route
         try:
-            if token_route and not session:
+            if (token_route or path == '/api/auth/preferences') and not session:
                 raise HTTPException(401, 'Sign in required')
             if ((editor_route and path != '/api/editor/session') or admin_route or (not public and not allowed_public and path != '/api/editor/session')) and not session:
                 raise HTTPException(401, 'Sign in required')
@@ -406,7 +428,7 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
     @app.get('/admin/', response_class=HTMLResponse)
     async def admin_page(request: Request):
         language = pages.language(request.headers.get('accept-language', ''))
-        return pages.render('admin', language, prefix)
+        return pages.render('admin', language, prefix, request.state.auth['user']['theme'])
 
     @app.get('/api/editor/session')
     @app.get('/api/auth/me')
@@ -442,6 +464,13 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
         response = JSONResponse({'ok': True})
         response.delete_cookie('wiki_session', path=cookie_path, secure=secure, httponly=True, samesite='strict')
         return response
+
+    @app.post('/api/auth/preferences')
+    async def preferences(request: Request):
+        body = await payload(request)
+        if set(body) != {'theme'}:
+            raise HTTPException(422, 'Expected only theme')
+        return store.set_theme(request.state.auth['user']['id'], body['theme'])
 
     @app.post('/api/auth/password')
     async def password(request: Request):

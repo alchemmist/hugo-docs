@@ -14,7 +14,8 @@ import uuid
 
 from audit import CURRENT_ACTOR
 from fastapi import HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from theme import apply_theme
 
 
 @dataclass
@@ -198,7 +199,7 @@ class LiveWiki:
                     self.depth -= 1
         return wrapped
 
-    def file(self, path):
+    def file(self, path, theme='light'):
         if not self.started:
             raise HTTPException(503, 'Wiki is starting')
         parts = path.split('/')
@@ -222,6 +223,9 @@ class LiveWiki:
             headers['Content-Security-Policy'] = "sandbox; default-src 'none'"
             if target.suffix == '.pdf':
                 headers['Content-Disposition'] = 'attachment'
+        if target.suffix.lower() == '.html' and not target.name.startswith('upload-'):
+            headers['Vary'] = 'Cookie'
+            return HTMLResponse(apply_theme(target.read_text(), theme), headers=headers)
         return FileResponse(target, media_type='font/woff2' if target.suffix == '.woff2' else None, headers=headers)
 
     def pending(self):

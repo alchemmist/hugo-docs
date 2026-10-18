@@ -4,8 +4,8 @@ import {mountMcpTokens} from './mcp-tokens.js';
 const mounts = new WeakMap();
 
 const words = {
-  en: {settings:'Settings',sections:'Settings sections',mcp:'MCP access',account:'Account',password:'Password',current:'Current password',next:'New password',change:'Change password',logout:'Sign out',username:'Username',status:'Status',actions:'Actions',role:'Role',reader:'Reader',editor:'Editor',admin:'Administrator',users:'Users',create:'Create user',disable:'Disable',enable:'Enable',reset:'Reset password',saved:'Saved',failed:'Request failed. Please try again.',loading:'Loading…',retry:'Try again',sync:'Git synchronization',syncDisabled:'Disabled',syncReady:'Up to date',syncPending:'Pending changes',syncError:'Synchronization failed',refresh:'Refresh',empty:'No users',disabled:'Disabled',active:'Active',required:'Enter a new password.'},
-  ru: {settings:'Настройки',sections:'Разделы настроек',mcp:'Доступ по MCP',account:'Аккаунт',password:'Пароль',current:'Текущий пароль',next:'Новый пароль',change:'Сменить пароль',logout:'Выйти',username:'Логин',status:'Статус',actions:'Действия',role:'Роль',reader:'Читатель',editor:'Редактор',admin:'Администратор',users:'Пользователи',create:'Создать пользователя',disable:'Отключить',enable:'Включить',reset:'Сбросить пароль',saved:'Сохранено',failed:'Не удалось выполнить запрос. Повторите попытку.',loading:'Загрузка…',retry:'Повторить',sync:'Синхронизация Git',syncDisabled:'Отключена',syncReady:'Все изменения отправлены',syncPending:'Ожидают отправки',syncError:'Ошибка синхронизации',refresh:'Обновить',empty:'Нет пользователей',disabled:'Отключён',active:'Активен',required:'Введите новый пароль.'}
+  en: {settings:'Settings',sections:'Settings sections',mcp:'MCP access',account:'Account',appearance:'Appearance',theme:'Theme',light:'Light',dark:'Dark',password:'Password',current:'Current password',next:'New password',change:'Change password',logout:'Sign out',username:'Username',status:'Status',actions:'Actions',role:'Role',reader:'Reader',editor:'Editor',admin:'Administrator',users:'Users',create:'Create user',disable:'Disable',enable:'Enable',reset:'Reset password',saved:'Saved',failed:'Request failed. Please try again.',loading:'Loading…',retry:'Try again',sync:'Git synchronization',syncDisabled:'Disabled',syncReady:'Up to date',syncPending:'Pending changes',syncError:'Synchronization failed',refresh:'Refresh',empty:'No users',disabled:'Disabled',active:'Active',required:'Enter a new password.'},
+  ru: {settings:'Настройки',sections:'Разделы настроек',mcp:'Доступ по MCP',account:'Аккаунт',appearance:'Оформление',theme:'Тема',light:'Светлая',dark:'Тёмная',password:'Пароль',current:'Текущий пароль',next:'Новый пароль',change:'Сменить пароль',logout:'Выйти',username:'Логин',status:'Статус',actions:'Действия',role:'Роль',reader:'Читатель',editor:'Редактор',admin:'Администратор',users:'Пользователи',create:'Создать пользователя',disable:'Отключить',enable:'Включить',reset:'Сбросить пароль',saved:'Сохранено',failed:'Не удалось выполнить запрос. Повторите попытку.',loading:'Загрузка…',retry:'Повторить',sync:'Синхронизация Git',syncDisabled:'Отключена',syncReady:'Все изменения отправлены',syncPending:'Ожидают отправки',syncError:'Ошибка синхронизации',refresh:'Обновить',empty:'Нет пользователей',disabled:'Отключён',active:'Активен',required:'Введите новый пароль.'}
 };
 
 export async function mountAdmin(root, navigate = url => location.assign(url)) {
@@ -82,6 +82,29 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
   const identity = node('p', session.user.username + ' · ' + text[session.user.role], 'wiki-admin-identity');
   const accountStatus = node('p', '', 'wiki-admin-status'); accountStatus.setAttribute('role', 'status');
   account.append(identity, action(text.logout, async () => { await request('auth/logout', {}); navigate(base); }, accountStatus), accountStatus, node('h3', text.password));
+  const appearance = node('div', '', 'wiki-theme-preference');
+  const themeLabel = node('label', text.theme);
+  const themeSelect = node('select'); themeSelect.name = 'theme'; themeSelect.setAttribute('aria-label', text.theme);
+  for (const theme of ['light','dark']) {
+    const option = node('option', text[theme]); option.value = theme; themeSelect.append(option);
+  }
+  themeSelect.value = session.user.theme === 'dark' ? 'dark' : 'light';
+  const themeStatus = node('p', '', 'wiki-admin-status'); themeStatus.setAttribute('role', 'status');
+  themeLabel.append(themeSelect); appearance.append(node('h3', text.appearance), themeLabel, themeStatus);
+  account.insertBefore(appearance, account.lastElementChild);
+  themeSelect.addEventListener('change', async () => {
+    const previous = session.user.theme === 'dark' ? 'dark' : 'light';
+    themeSelect.disabled = true; themeStatus.textContent = '';
+    try {
+      const result = await request('auth/preferences', {theme:themeSelect.value});
+      if (!['light','dark'].includes(result.theme)) throw new Error(text.failed);
+      session.user.theme = result.theme;
+      themeSelect.value = result.theme;
+      document.documentElement.dataset.theme = result.theme;
+      themeStatus.textContent = text.saved;
+    } catch (error) { themeSelect.value = previous; themeStatus.textContent = error.message; }
+    finally { themeSelect.disabled = false; }
+  });
   const loading = [];
   const field = (form, name, label, type = 'text') => {
     const wrap = node('label', label);

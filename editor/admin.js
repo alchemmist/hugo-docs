@@ -1,12 +1,16 @@
 import {authError} from './auth-errors.js';
 import {mountMcpTokens} from './mcp-tokens.js';
 
+const mounts = new WeakMap();
+
 const words = {
-  en: {account:'Account',password:'Password',current:'Current password',next:'New password',change:'Change password',logout:'Sign out',username:'Username',role:'Role',reader:'Reader',editor:'Editor',admin:'Administrator',users:'Users',create:'Create user',disable:'Disable',enable:'Enable',reset:'Reset password',saved:'Saved',failed:'Request failed. Please try again.',loading:'Loading…',retry:'Try again',sync:'Git synchronization',syncDisabled:'Disabled',syncReady:'Up to date',syncPending:'Pending changes',syncError:'Synchronization failed',refresh:'Refresh',empty:'No users',disabled:'Disabled',active:'Active',required:'Enter a new password.'},
-  ru: {account:'Аккаунт',password:'Пароль',current:'Текущий пароль',next:'Новый пароль',change:'Сменить пароль',logout:'Выйти',username:'Логин',role:'Роль',reader:'Читатель',editor:'Редактор',admin:'Администратор',users:'Пользователи',create:'Создать пользователя',disable:'Отключить',enable:'Включить',reset:'Сбросить пароль',saved:'Сохранено',failed:'Не удалось выполнить запрос. Повторите попытку.',loading:'Загрузка…',retry:'Повторить',sync:'Синхронизация Git',syncDisabled:'Отключена',syncReady:'Все изменения отправлены',syncPending:'Ожидают отправки',syncError:'Ошибка синхронизации',refresh:'Обновить',empty:'Нет пользователей',disabled:'Отключён',active:'Активен',required:'Введите новый пароль.'}
+  en: {settings:'Settings',sections:'Settings sections',mcp:'MCP access',account:'Account',password:'Password',current:'Current password',next:'New password',change:'Change password',logout:'Sign out',username:'Username',role:'Role',reader:'Reader',editor:'Editor',admin:'Administrator',users:'Users',create:'Create user',disable:'Disable',enable:'Enable',reset:'Reset password',saved:'Saved',failed:'Request failed. Please try again.',loading:'Loading…',retry:'Try again',sync:'Git synchronization',syncDisabled:'Disabled',syncReady:'Up to date',syncPending:'Pending changes',syncError:'Synchronization failed',refresh:'Refresh',empty:'No users',disabled:'Disabled',active:'Active',required:'Enter a new password.'},
+  ru: {settings:'Настройки',sections:'Разделы настроек',mcp:'Доступ по MCP',account:'Аккаунт',password:'Пароль',current:'Текущий пароль',next:'Новый пароль',change:'Сменить пароль',logout:'Выйти',username:'Логин',role:'Роль',reader:'Читатель',editor:'Редактор',admin:'Администратор',users:'Пользователи',create:'Создать пользователя',disable:'Отключить',enable:'Включить',reset:'Сбросить пароль',saved:'Сохранено',failed:'Не удалось выполнить запрос. Повторите попытку.',loading:'Загрузка…',retry:'Повторить',sync:'Синхронизация Git',syncDisabled:'Отключена',syncReady:'Все изменения отправлены',syncPending:'Ожидают отправки',syncError:'Ошибка синхронизации',refresh:'Обновить',empty:'Нет пользователей',disabled:'Отключён',active:'Активен',required:'Введите новый пароль.'}
 };
 
 export async function mountAdmin(root, navigate = url => location.assign(url)) {
+  mounts.get(root)?.();
+  const view = root.ownerDocument.defaultView;
   const text = words[document.documentElement.lang.split('-')[0]] || words.en;
   const base = root.dataset.basePath || '/';
   let session = {};
@@ -16,7 +20,7 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
     if (className) element.className = className;
     return element;
   };
-  const title = node('h1', text.account);
+  const title = node('h1', text.settings);
   root.replaceChildren(title);
   const status = node('p', text.loading, 'wiki-admin-status');
   status.setAttribute('role', 'status');
@@ -44,16 +48,41 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
     return;
   }
   if (!session.user) { navigate(base + 'login?next=' + encodeURIComponent(base + 'admin')); return; }
-  status.textContent = '';
-  const identity = node('p', session.user.username + ' · ' + text[session.user.role], 'wiki-admin-identity');
-  root.insertBefore(identity, status);
-  root.append(action(text.logout, async () => { await request('auth/logout', {}); navigate(base); }));
-  const section = label => {
-    const section = node('section', '', 'wiki-admin-section');
-    section.append(node('h2', label));
-    root.append(section);
-    return section;
+  status.remove();
+  const layout = node('div', '', 'wiki-admin-layout');
+  const nav = node('nav', '', 'wiki-admin-nav');
+  nav.setAttribute('aria-label', text.sections);
+  const panels = node('div', '', 'wiki-admin-panels');
+  layout.append(nav, panels); root.append(layout);
+  const entries = new Map();
+  const select = () => {
+    const requested = view.location.hash.slice(1);
+    const selected = entries.has(requested) ? requested : 'account';
+    for (const [id, entry] of entries) {
+      entry.panel.hidden = id !== selected;
+      if (id === selected) entry.link.setAttribute('aria-current', 'page');
+      else entry.link.removeAttribute('aria-current');
+    }
   };
+  const register = (id, label, panel) => {
+    panel.id = 'admin-' + id;
+    const link = node('a', label); link.href = '#' + id;
+    nav.append(link); entries.set(id, {link, panel});
+    select();
+    return panel;
+  };
+  const section = (id, label) => {
+    const panel = node('section', '', 'wiki-admin-section');
+    panel.append(node('h2', label)); panels.append(panel);
+    return register(id, label, panel);
+  };
+  view.addEventListener('hashchange', select);
+  mounts.set(root, () => view.removeEventListener('hashchange', select));
+  const account = section('account', text.account);
+  const identity = node('p', session.user.username + ' · ' + text[session.user.role], 'wiki-admin-identity');
+  const accountStatus = node('p', '', 'wiki-admin-status'); accountStatus.setAttribute('role', 'status');
+  account.append(identity, action(text.logout, async () => { await request('auth/logout', {}); navigate(base); }, accountStatus), accountStatus, node('h3', text.password));
+  const loading = [];
   const field = (form, name, label, type = 'text') => {
     const wrap = node('label', label);
     const input = node('input');
@@ -90,12 +119,12 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
     });
     return form;
   };
-  form(section(text.password), text.change, [['current_password',text.current,'password'],['password',text.next,'password']], async data => {
+  form(account, text.change, [['current_password',text.current,'password'],['password',text.next,'password']], async data => {
     await request('auth/password', data);
     navigate(base + 'login?next=' + encodeURIComponent(base + 'admin'));
   }, false, session.user.username);
   if (session.writable) {
-    const sync = section(text.sync);
+    const sync = section('sync', text.sync);
     const message = node('p', '', 'wiki-admin-sync'); message.setAttribute('role','status'); sync.append(message);
     const refresh = async () => {
       message.textContent = text.loading;
@@ -104,11 +133,14 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
         message.textContent = !value.git_enabled ? text.syncDisabled : value.error ? text.syncError + ': ' + value.error : value.pending ? text.syncPending + ' (' + value.pending + ')' : text.syncReady;
       } catch (error) { message.textContent = error.message; }
     };
-    sync.append(action(text.refresh, refresh, message)); await refresh();
+    sync.append(action(text.refresh, refresh, message)); loading.push(refresh());
   }
-  await mountMcpTokens(root, session, request);
-  if (session.user.role !== 'admin') return session;
-  const users = section(text.users);
+  if (session.mcp_enabled) {
+    loading.push(mountMcpTokens(panels, session, request));
+    register('mcp', text.mcp, panels.lastElementChild);
+  }
+  if (session.user.role !== 'admin') { await Promise.all(loading); return session; }
+  const users = section('users', text.users);
   const list = node('div', '', 'wiki-admin-users'); users.append(list);
   const listStatus = node('p', '', 'wiki-admin-status'); listStatus.setAttribute('role','status'); users.append(listStatus);
   const refresh = async () => {
@@ -136,8 +168,10 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
   };
   const load = async () => { listStatus.textContent = text.loading; try { await refresh(); listStatus.textContent = ''; } catch (error) { listStatus.textContent = error.message; } };
   users.append(action(text.refresh, load, listStatus));
-  form(section(text.create), text.create, [['username',text.username],['password',text.password,'password']], async data => { await request('admin/users', data); await refresh(); }, true);
-  await load();
+  users.append(node('h3', text.create));
+  form(users, text.create, [['username',text.username],['password',text.password,'password']], async data => { await request('admin/users', data); await refresh(); }, true);
+  loading.push(load());
+  await Promise.all(loading);
   return session;
 }
 

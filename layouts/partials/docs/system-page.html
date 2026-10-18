@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   {{ with .page.Site.Params.docs.logo }}<link rel="icon" href="{{ . | relURL }}">{{ else }}<link rel="icon" href="data:,">{{ end }}
-  <title>{{ if eq .surface "login" }}{{ if eq .language "ru" }}Вход{{ else }}Sign in{{ end }}{{ else }}{{ if eq .language "ru" }}Аккаунт{{ else }}Account{{ end }}{{ end }} · {{ .page.Site.Title }}</title>
+  <title>{{ if eq .surface "login" }}{{ if eq .language "ru" }}Вход{{ else }}Sign in{{ end }}{{ else }}{{ if eq .language "ru" }}Настройки{{ else }}Settings{{ end }}{{ end }} · {{ .page.Site.Title }}</title>
   {{ partial "content/head.html" .page }}
   {{ range slice "docs.css" "admin.css" }}
   {{ $style := resources.Get . | minify | fingerprint }}

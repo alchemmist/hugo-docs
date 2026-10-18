@@ -72,3 +72,70 @@ test('Russian admin error preserves form values',async () => {
   assert.match(form.textContent,/Пользователь с таким логином уже существует/);
   assert.equal(form.elements.username.value,'alice');assert.equal(form.elements.password.value,'long-password');
 });
+
+test('navigation reflects role and enabled capabilities', async () => {
+  for (const [role, expected] of [['reader',['account','mcp']],['editor',['account','sync','mcp']],['admin',['account','sync','mcp','users']]]) {
+    const {root,calls} = setup(role, path => path.endsWith('/session') ? {user:{username:'alice',role},writable:role !== 'reader',mcp_enabled:true,mcp_url:'https://wiki.test/mcp'} : path.endsWith('/tokens') ? {tokens:[]} : undefined);
+    await mountAdmin(root);
+    assert.deepEqual([...root.querySelectorAll('nav a')].map(link => link.hash.slice(1)), expected);
+    assert.deepEqual([...root.querySelectorAll('.wiki-admin-panels > section:not([hidden])')].map(panel => panel.id), ['admin-account']);
+    assert.equal(root.querySelector('[aria-current="page"]').hash,'#account');
+    if (role !== 'admin') assert.equal(calls.some(call => call.path.includes('/admin/users')),false);
+    if (role === 'reader') assert.equal(calls.some(call => call.path.endsWith('/sync')),false);
+  }
+});
+
+test('section deep links and history preserve form drafts', async () => {
+  const {root} = setup('admin');
+  const view = document.defaultView;
+  view.history.replaceState(null,'','#users');
+  await mountAdmin(root);
+  assert.equal(root.querySelector('[aria-current="page"]').hash,'#users');
+  const create = root.querySelector('#admin-users > form');
+  create.elements.username.value = 'draft-user';
+  view.history.pushState(null,'','#account'); view.dispatchEvent(new view.HashChangeEvent('hashchange'));
+  assert.equal(root.querySelector('#admin-account').hidden,false);
+  assert.equal(root.querySelector('#admin-users').hidden,true);
+  view.history.back(); await new Promise(resolve => setTimeout(resolve,30));
+  assert.equal(root.querySelector('#admin-users').hidden,false);
+  assert.equal(create.elements.username.value,'draft-user');
+  view.history.replaceState(null,'','#unknown'); view.dispatchEvent(new view.HashChangeEvent('hashchange'));
+  assert.equal(root.querySelector('#admin-account').hidden,false);
+});
+
+test('account and navigation render before slow services finish', async () => {
+  const {root} = setup('admin');
+  let releaseSync, releaseUsers;
+  globalThis.fetch = async path => ({ok:true,json:async () => path.endsWith('/session') ? {user:{username:'alice',role:'admin'},writable:true} : path.endsWith('/sync') ? new Promise(resolve => {releaseSync=resolve;}) : new Promise(resolve => {releaseUsers=resolve;})});
+  const mounted = mountAdmin(root);
+  await tick();
+  assert.equal(root.querySelectorAll('nav a').length,3);
+  assert.equal(root.querySelector('#admin-account').hidden,false);
+  assert.ok(root.querySelector('#admin-account [name=current_password]'));
+  releaseSync({git_enabled:false}); releaseUsers({users:[]}); await mounted;
+});
+
+test('remount replaces its history listener', async () => {
+  const {root} = setup('reader'); const view=document.defaultView;
+  const add=view.addEventListener.bind(view), remove=view.removeEventListener.bind(view);
+  const registered=[],removed=[];
+  view.addEventListener=(type,listener,...args)=>{if(type==='hashchange')registered.push(listener);return add(type,listener,...args);};
+  view.removeEventListener=(type,listener,...args)=>{if(type==='hashchange')removed.push(listener);return remove(type,listener,...args);};
+  await mountAdmin(root); await mountAdmin(root);
+  assert.equal(registered.length,2);assert.deepEqual(removed,[registered[0]]);
+});
+
+test('switching sections keeps a newly issued MCP token', async () => {
+  const {root} = setup('reader', (path, options) => path.endsWith('/session') ? {user:{username:'alice',role:'reader'},writable:false,mcp_enabled:true,mcp_url:'https://wiki.test/mcp'} : path.endsWith('/tokens') ? options.method === 'POST' ? {id:'token-1',token:'wiki_personal_secret'} : {tokens:[]} : undefined);
+  await mountAdmin(root);
+  const view=document.defaultView;
+  const activate = id => {view.history.replaceState(null,'','#'+id);view.dispatchEvent(new view.HashChangeEvent('hashchange'));};
+  activate('mcp');
+  const form=root.querySelector('#admin-mcp form');form.elements.token_name.value='agent';
+  form.dispatchEvent(new view.Event('submit',{cancelable:true}));await tick();
+  const secret=root.querySelector('.wiki-mcp-secret input');
+  assert.equal(secret.value,'wiki_personal_secret');
+  activate('account');activate('mcp');
+  assert.equal(root.querySelector('.wiki-mcp-secret input'),secret);
+  assert.equal(secret.value,'wiki_personal_secret');
+});

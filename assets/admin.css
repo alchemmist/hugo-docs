@@ -46,3 +46,17 @@
 .wiki-mcp-token p { margin: 6px 0 0; color: var(--muted); font: 13px/1.5 var(--ui); overflow-wrap: anywhere; }
 .wiki-mcp-token button { flex-shrink: 0; }
 @media (max-width: 480px) { .wiki-mcp-value { flex-wrap: wrap; } .wiki-mcp-value label { flex-basis: 100%; } }
+.wiki-system-shell:has(#wiki-admin) { max-width: 1120px; }
+#wiki-admin { max-width: none; padding-top: 0; }
+.wiki-admin-layout { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 48px; align-items: start; margin-top: 32px; }
+.wiki-admin-nav { position: sticky; top: 32px; display: flex; flex-direction: column; gap: 4px; font: 13px/1.5 var(--ui); }
+.wiki-admin-nav a { display: block; padding: 9px 10px; color: var(--muted); text-decoration: none; border-radius: 3px; }
+.wiki-admin-nav a:hover { color: var(--ink); background: #f5f5f5; }
+.wiki-admin-nav a[aria-current="page"] { color: var(--ink); background: #eeeeef; }
+.wiki-admin-panels { min-width: 0; }
+.wiki-admin-panels > .wiki-admin-section { margin-top: 0; padding-top: 0; border-top: 0; }
+#wiki-admin .wiki-admin-panels > .wiki-admin-section > h3 { margin: 28px 0 16px; }
+@media (max-width: 760px) {
+  .wiki-admin-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; margin-top: 24px; }
+  .wiki-admin-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px 8px; }
+}

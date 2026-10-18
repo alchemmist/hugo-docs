@@ -144,7 +144,6 @@ main:focus { outline: none; }
 .document-footer a { color: var(--muted); }
 
 .page-outline { justify-self: end; position: sticky; top: 64px; padding-top: 32px; max-height: calc(100dvh - 100px); max-width: 176px; overflow: auto; font-size: 12px; line-height: 1.6; }
-.outline-title { font-size: 11px; color: var(--muted); margin-bottom: 15px; }
 .page-outline ul { list-style: none; margin: 0; padding: 0; }
 .page-outline ul ul { padding-left: 12px; margin: 3px 0; }
 .page-outline a { display: block; color: var(--muted); padding: 5px 0; text-decoration: none; }

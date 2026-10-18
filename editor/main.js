@@ -1,5 +1,6 @@
 import { configureRichContent, insertRichContent } from './rich-content.js';
 import { t } from './i18n.js';
+import { createFormatToolbar } from './toolbar.js';
 import { mountAccount } from './account.js';
 import { resolvePreviewLinks } from './preview-links.js';
 import { createWorkspace, batchPages } from './workspace.js';
@@ -83,29 +84,36 @@ function initialize(session) {
     return true;
   };
   function addToolbar() {
-    toolbar = document.createElement('div'); toolbar.className = 'wiki-formatbar'; toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', t('Форматирование текста'));
-    const commands = [
-      [t('Текст'), () => editor.chain().focus().setParagraph().run()],
-      ['H2', () => editor.chain().focus().toggleHeading({level:2}).run()],
-      ['H3', () => editor.chain().focus().toggleHeading({level:3}).run()],
-      [t('Жирный'), () => editor.chain().focus().toggleBold().run()],
-      [t('Курсив'), () => editor.chain().focus().toggleItalic().run()],
-      [t('Список'), () => editor.chain().focus().toggleBulletList().run()],
-      [t('1. Список'), () => editor.chain().focus().toggleOrderedList().run()],
-      [t('Код'), () => editor.chain().focus().toggleCodeBlock().run()],
-      [t('Таблица'), () => editor.chain().focus().insertTable({rows:3,cols:2,withHeaderRow:true}).run()],
-      [t('Ссылка'), () => { linkForm.hidden = !linkForm.hidden; if (!linkForm.hidden) linkForm.querySelector('input').focus(); }]
-    ];
-    for (const [label, run] of commands) {
-      const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
-      button.addEventListener('mousedown', event => event.preventDefault());
-      button.addEventListener('click', () => { if (!busy) run(); }); toolbar.append(button);
-    }
     const upload = document.createElement('input'); upload.type='file'; upload.accept='image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,audio/mpeg,audio/ogg'; upload.hidden=true;
-    const uploadButton = document.createElement('button'); uploadButton.type='button'; uploadButton.textContent=t('Медиа'); uploadButton.addEventListener('click',()=>upload.click());
+    const toggle = (id, label, command, node, attributes) => ({id, label:t(label), run:()=>editor.chain().focus()[command](attributes).run(), active:()=>editor.isActive(node, attributes)});
+    const rich = (id, label, kind = id) => ({id, label:t(label), run:()=>insertRichContent(editor,kind)});
+    const formatting = createFormatToolbar({document, editor, label:t('Форматирование текста'), isBusy:()=>busy, groups:[
+      {label:'Text style', actions:[
+        toggle('paragraph','Текст','setParagraph','paragraph'),
+        toggle('heading2','Heading 2','toggleHeading','heading',{level:2}),
+        toggle('heading3','Heading 3','toggleHeading','heading',{level:3}),
+        toggle('bold','Жирный','toggleBold','bold'),
+        toggle('italic','Курсив','toggleItalic','italic')
+      ]},
+      {label:'Lists', actions:[
+        toggle('bullet','Список','toggleBulletList','bulletList'),
+        toggle('ordered','1. Список','toggleOrderedList','orderedList'),
+        {...rich('task','Задачи'), active:()=>editor.isActive('taskList')}
+      ]},
+      {label:'Insert', actions:[
+        {id:'link', label:t('Ссылка'), active:()=>editor.isActive('link'), run:()=>{linkForm.hidden=!linkForm.hidden;if(!linkForm.hidden)linkForm.querySelector('input').focus();}},
+        toggle('code','Код','toggleCodeBlock','codeBlock'),
+        {id:'table',label:t('Таблица'),run:()=>editor.chain().focus().insertTable({rows:3,cols:2,withHeaderRow:true}).run()},
+        {id:'media',label:t('Медиа'),run:()=>upload.click()}
+      ]},
+      {label:'Rich content', actions:[
+        rich('math','Формула'),rich('diagram','Диаграмма','mermaid'),rich('note','Примечание','alert'),rich('footnote','Сноска')
+      ]}
+    ]});
+    toolbar = formatting.element;
+    const uploadButton = formatting.buttons.get('media');
     upload.addEventListener('change',async()=>{ const file=upload.files[0];if(!file || busy)return;uploadButton.disabled=true;try{if(file.size>8*1024*1024)throw new Error(t('Файл должен быть меньше 8 МБ.'));const content=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file);});const result=await api('/uploads',{name:file.name,content});workspace.addUpload(result.id);editor.chain().focus().setImage({src:result.url,alt:file.name}).run();stash();}catch(error){message(error.message,true);}finally{uploadButton.disabled=false;upload.value='';}});
-    toolbar.append(uploadButton,upload);
-    for(const [kind,label] of [['math','Формула'],['mermaid','Диаграмма'],['alert','Примечание'],['footnote','Сноска'],['task','Задачи']]){const button=document.createElement('button');button.type='button';button.textContent=t(label);button.addEventListener('click',()=>{if(!busy)insertRichContent(editor,kind);});toolbar.append(button);}
+    toolbar.append(upload);
     article.before(toolbar);
     linkForm = document.createElement('form'); linkForm.className = 'wiki-link-form'; linkForm.hidden = true;
     const input = document.createElement('input'); input.type = 'text'; input.placeholder = t('https://… или /раздел/заметка/'); input.setAttribute('aria-label', t('Адрес ссылки'));

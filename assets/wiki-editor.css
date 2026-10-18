@@ -1,15 +1,22 @@
 #wiki-editor [hidden], .wiki-new-fields[hidden] { display: none !important; }
 .wiki-editor-actions { position: fixed; top: 16px; right: 24px; display: flex; gap: 4px; z-index: 10; background: transparent; }
 .wiki-editbar { position: fixed; top: 12px; right: 24px; display: flex; align-items: center; gap: 12px; z-index: 20; padding: 8px 10px; background: #fff; border: 1px solid var(--rule); border-radius: 4px; font: 12px var(--ui); }
-.wiki-editbar button, .wiki-formatbar button { border: 1px solid var(--rule); background: #fff; padding: 7px 10px; border-radius: 3px; font: inherit; cursor: pointer; color: var(--ink); }
+.wiki-editbar button { border: 1px solid var(--rule); background: #fff; padding: 7px 10px; border-radius: 3px; font: inherit; cursor: pointer; color: var(--ink); }
 .wiki-editbar [data-editor-save] { background: var(--blue); color: #fff; border-color: var(--blue); }
 .wiki-editbar button:disabled { opacity: .55; cursor: wait; }
 .wiki-rich-editor .tiptap { min-height: 160px; outline: none; }
 .wiki-rich-editor .tiptap:focus-visible, #page-title[contenteditable]:focus-visible { outline: none; }
 #page-title[contenteditable] { caret-color: var(--blue); }
 .wiki-rich-editor .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: var(--muted); pointer-events: none; height: 0; }
-.wiki-formatbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0; margin-bottom: 22px; font: 11px var(--ui); }
-.wiki-formatbar button:hover { background: #f1f1f1; }
+.wiki-formatbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 6px 0; margin-bottom: 22px; color: var(--muted); }
+.wiki-formatbar-group { display: flex; align-items: center; gap: 2px; }
+.wiki-formatbar button { display: inline-grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px; padding: 6px; border: 0; border-radius: 3px; color: inherit; background: transparent; cursor: pointer; }
+.wiki-formatbar button svg { display: block; width: 20px; height: 20px; pointer-events: none; }
+.wiki-formatbar button:hover { color: var(--ink); background: #f1f1f1; }
+.wiki-formatbar button[aria-pressed="true"] { color: var(--blue); background: #edf1fa; }
+.wiki-formatbar button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.wiki-formatbar button:disabled { opacity: .35; cursor: default; }
+@media (pointer: coarse) { .wiki-formatbar button { width: 40px; height: 40px; flex-basis: 40px; } }
 .wiki-new-fields { display: flex; gap: 16px; margin-bottom: 24px; font: 12px var(--ui); }
 .wiki-new-fields label { display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 0; }
 .wiki-new-fields input, .wiki-new-fields select { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #aaa; color: var(--ink); background: #fff; font: inherit; }

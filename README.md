@@ -6,15 +6,15 @@ Folders expand in the sidebar; only notes have pages. Search, breadcrumbs, and p
 
 ## Start an editable wiki
 
-Release [v0.2.7](https://github.com/alchemmist/hugo-docs/releases/tag/v0.2.7) includes a public runtime image and Helm chart. With Docker Compose installed:
+Release [v0.2.8](https://github.com/alchemmist/hugo-docs/releases/tag/v0.2.8) includes a public runtime image and Helm chart. With Docker Compose installed:
 
 ```sh
-git clone --branch v0.2.7 https://github.com/alchemmist/hugo-docs.git
+git clone --branch v0.2.8 https://github.com/alchemmist/hugo-docs.git
 cd hugo-docs
 docker compose -f compose.wiki.yaml up -d --no-build
 ```
 
-This starts the published `ghcr.io/alchemmist/hugo-docs-wiki:0.2.7` image without a local build. To build your own image from this checkout instead, run `make wiki-up`.
+This starts the published `ghcr.io/alchemmist/hugo-docs-wiki:0.2.8` image without a local build. To build your own image from this checkout instead, run `make wiki-up`.
 
 Open <http://localhost:8080/login> and create the first administrator. Read the one-time bootstrap token locally:
 
@@ -49,7 +49,7 @@ Initialize a Hugo module if your project does not already have `go.mod`:
 
 ```sh
 hugo mod init example.com/my-docs
-hugo mod get github.com/alchemmist/hugo-docs@v0.2.7
+hugo mod get github.com/alchemmist/hugo-docs@v0.2.8
 ```
 
 Configure `hugo.toml`:

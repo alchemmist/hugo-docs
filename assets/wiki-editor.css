@@ -57,7 +57,7 @@ body.wiki-editing .wiki-tree-row { touch-action: pan-y; user-select: none; -webk
 .wiki-workspace-drafts:empty { display: none; }
 .wiki-workspace-drafts button { white-space: nowrap; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
 
-.wiki-tree-delete { display: none; flex: 0 0 26px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; cursor: pointer; opacity: 0; }
+.wiki-tree-delete { display: none; align-self: center; flex: 0 0 26px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; cursor: pointer; opacity: 0; }
 .wiki-tree-delete svg { width: 16px; height: 16px; }
 body.wiki-editing .wiki-tree-delete { display: grid; place-items: center; }
 .wiki-tree-row:hover .wiki-tree-delete, .wiki-tree-row:focus-within .wiki-tree-delete, .wiki-tree-delete.is-confirming { opacity: 1; }
@@ -66,7 +66,7 @@ body.wiki-editing .wiki-tree-delete { display: grid; place-items: center; }
 .wiki-tree-delete-tooltip { position: fixed; box-sizing: border-box; z-index: 100; max-width: calc(100vw - 24px); padding: 8px 10px; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper, #fff); color: var(--ink); font: 11px/1.5 var(--ui); box-shadow: 0 3px 8px #00000012; pointer-events: none; }
 @media (hover: none) { body.wiki-editing .wiki-tree-delete { opacity: 1; } }
 
-.wiki-tree-rename { display: none; flex: 0 0 26px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; cursor: pointer; opacity: 0; }
+.wiki-tree-rename { display: none; align-self: center; flex: 0 0 26px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; cursor: pointer; opacity: 0; }
 .wiki-tree-rename svg { width: 16px; height: 16px; }
 body.wiki-editing .wiki-tree-rename { display: grid; place-items: center; }
 .wiki-tree-row:hover .wiki-tree-rename, .wiki-tree-row:focus-within .wiki-tree-rename { opacity: 1; }

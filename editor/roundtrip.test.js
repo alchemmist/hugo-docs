@@ -64,3 +64,13 @@ test('selection boundary spaces survive inline monospace publication', () => {
   assert.equal(reopened.getJSON().content[0].content.find(node=>node.marks?.some(mark=>mark.type==='code')).text,'selected');
   editor.destroy(); reopened.destroy();
 });
+
+for (const content of ['`selected`','**`selected`**','*`selected`*']) test('link added to monospace survives publication: '+content, () => {
+  const editor = new Editor({element:document.createElement('div'),extensions:extensions(),content,contentType:'markdown'});
+  editor.commands.selectAll(); editor.commands.setLink({href:'/target/'});
+  assert.equal(editor.isActive('code'),true);
+  assert.equal(editor.isActive('link'),true);
+  const reopened = new Editor({element:document.createElement('div'),extensions:extensions(),content:editor.getMarkdown(),contentType:'markdown'});
+  assert.deepEqual(reopened.getJSON(),editor.getJSON());
+  editor.destroy(); reopened.destroy();
+});

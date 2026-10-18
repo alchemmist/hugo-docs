@@ -23,5 +23,16 @@ test('opening an existing page finishes loading with an enabled Publish action',
   assert.equal(inline.getAttribute('aria-pressed'),'false');
   assert.ok(inline.querySelector('svg path').getAttribute('d'));
   assert.notEqual(inline.querySelector('svg path').getAttribute('d'),document.querySelector('[data-format="code"] svg path').getAttribute('d'));
+  const editor = document.querySelector('.tiptap').editor;
+  editor.commands.setTextSelection({from:1,to:5});
+  inline.click();
+  document.querySelector('[data-format="link"]').click();
+  const linkForm = document.querySelector('.wiki-link-form');
+  linkForm.querySelector('input').value = '/target/';
+  linkForm.requestSubmit();
+  assert.equal(editor.getMarkdown(),'[`Text`](/target/)');
+  assert.equal(editor.isActive('code'),true);
+  assert.equal(editor.isActive('link'),true);
+  assert.equal(document.querySelector('[data-format="inlineCode"]').getAttribute('aria-pressed'),'true');
   dom.window.close();
 });

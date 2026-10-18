@@ -62,6 +62,21 @@ a:hover { text-decoration-thickness: 2px; }
 .search-trigger .icon { width: 16px; height: 16px; }
 kbd { font-family: var(--ui); font-size: 10px; color: var(--muted); border: 1px solid var(--rule); border-radius: 3px; padding: 2px 4px; white-space: nowrap; }
 .search-trigger kbd { margin-left: auto; }
+.page-tree, .page-outline {
+  --sidebar-mask: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(0 0 0 / 15%) calc(var(--sidebar-fade-top, 0px) * 0.5),
+    rgb(0 0 0 / 60%) calc(var(--sidebar-fade-top, 0px) * 0.8),
+    #000 var(--sidebar-fade-top, 0px),
+    #000 calc(100% - var(--sidebar-fade-bottom, 0px)),
+    rgb(0 0 0 / 60%) calc(100% - var(--sidebar-fade-bottom, 0px) * 0.8),
+    rgb(0 0 0 / 15%) calc(100% - var(--sidebar-fade-bottom, 0px) * 0.5),
+    transparent
+  );
+  -webkit-mask-image: var(--sidebar-mask);
+  mask-image: var(--sidebar-mask);
+}
 .page-tree { flex: 1; overflow-y: auto; padding: 2px 4px 20px 0; }
 .nav-level { list-style: none; padding: 0; margin: 0; }
 .nav-level .nav-level { padding-left: 20px; }

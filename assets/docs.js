@@ -45,6 +45,43 @@
     });
   }
 
+  for (const panel of document.querySelectorAll(".page-tree, .page-outline")) {
+    let pending = false;
+    const updateEdges = () => {
+      pending = false;
+      const top = Math.max(0, panel.scrollTop);
+      const bottom = Math.max(0, panel.scrollHeight - panel.clientHeight - top);
+      for (const [edge, remaining] of [["top", top], ["bottom", bottom]]) {
+        const value = `${remaining <= 1 ? 0 : Math.min(64, remaining)}px`;
+        const property = `--sidebar-fade-${edge}`;
+        if (panel.style.getPropertyValue(property) !== value) panel.style.setProperty(property, value);
+      }
+    };
+    const scheduleEdges = () => {
+      if (!pending) { pending = true; requestAnimationFrame(updateEdges); }
+    };
+    const resizeObserver = new ResizeObserver(scheduleEdges);
+    const observeContent = () => {
+      resizeObserver.disconnect();
+      resizeObserver.observe(panel);
+      for (const child of panel.children) resizeObserver.observe(child);
+      scheduleEdges();
+    };
+    new MutationObserver(observeContent).observe(panel, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["hidden", "class", "open"],
+    });
+    panel.addEventListener("scroll", scheduleEdges, { passive: true });
+    addEventListener("resize", scheduleEdges, { passive: true });
+    addEventListener("pageshow", scheduleEdges);
+    document.fonts.ready.then(scheduleEdges);
+    observeContent();
+    updateEdges();
+  }
+
   const outlineLinks = [...document.querySelectorAll(".page-outline nav a")];
   const headings = [...document.querySelectorAll(".hc-content :is(h2,h3)[id]")];
   let scheduled = false;

@@ -7,6 +7,35 @@ export async function initializeTree({api, workspace, begin = () => true, dirty,
   let confirmation, renaming, renameSaving;
   const clearConfirmation = () => { if (confirmation) { confirmation.reset(); confirmation = null; } };
   let tree, loading, treeGeneration = 0, pending = false, dragging = '', expanded = new Set(), chooser, pointer, drop, expandTimer, expandId, scrollFrame;
+  const state = nav.ownerDocument.defaultView?.WikiTreeState;
+  const normalize = id => state?.normalize(id) ?? String(id).replace(/^\/+|\/+$/g, '');
+  const remembered = new Map();
+  function rememberExpansion(id, value) {
+    id = normalize(id);
+    remembered.set(id, value);
+    state?.set(id, value);
+    value ? expanded.add(id) : expanded.delete(id);
+    for (const toggle of nav.querySelectorAll('.tree-toggle[data-section]')) {
+      if (normalize(toggle.dataset.section) === id) toggle.setAttribute('aria-expanded', String(value));
+    }
+  }
+  function captureExpansion() {
+    for (const toggle of nav.querySelectorAll('.tree-toggle[data-section]')) {
+      const id = normalize(toggle.dataset.section);
+      const value = state?.get(id, toggle.getAttribute('aria-expanded') === 'true') ?? (toggle.getAttribute('aria-expanded') === 'true');
+      remembered.set(id, value);
+      if (value) state?.set(id, true);
+    }
+    expanded = new Set();
+    for (const node of flatten(tree.nodes)) {
+      if (node.kind !== 'folder') continue;
+      const fallback = remembered.has(normalize(node.id)) ? remembered.get(normalize(node.id)) : currentPath().startsWith(node.id + '/');
+      const value = state?.get(node.id, fallback) ?? fallback;
+      remembered.set(normalize(node.id), value);
+      if (value) state?.set(node.id, true);
+      if (value) expanded.add(node.id);
+    }
+  }
   const error = text => message(text, true);
   const button = (text, label, action) => {
     const el = document.createElement('button'); el.type = 'button'; el.textContent = text; el.setAttribute('aria-label', label); el.title = label; el.addEventListener('click', action); return el;
@@ -58,6 +87,10 @@ export async function initializeTree({api, workspace, begin = () => true, dirty,
       const oldNodes = flatten(tree.nodes);
       if (endpoint === '/move') {
         const target = payload.target_parent ? payload.target_parent + '/' + payload.source.split('/').pop() : payload.source.split('/').pop();
+        captureExpansion();
+        for (const node of oldNodes.filter(n => n.kind === 'folder' && (n.id === payload.source || n.id.startsWith(payload.source + '/')))) {
+          rememberExpansion(target + node.id.slice(payload.source.length), expanded.has(node.id));
+        }
         for (const node of oldNodes.filter(n => n.kind === 'page' && (n.id === payload.source || n.id.startsWith(payload.source + '/')))) pendingLinks.set(target + node.id.slice(payload.source.length), pendingLinks.has(node.id) ? pendingLinks.get(node.id) : node.url);
       }
       treeGeneration++; tree = result; chooser?.remove(); render(); if (!workspace) watchPublication(result.commit);
@@ -163,7 +196,7 @@ export async function initializeTree({api, workspace, begin = () => true, dirty,
     if (nextExpand !== expandId) {
       clearTimeout(expandTimer); expandId = nextExpand;
       if (nextExpand) expandTimer = setTimeout(() => {
-        expanded.add(nextExpand);
+        rememberExpansion(nextExpand, true);
         const children = target.row.parentElement.querySelector(':scope > ul');
         if (children) children.hidden = false;
         target.row.querySelector('[aria-expanded]')?.setAttribute('aria-expanded', 'true');
@@ -174,7 +207,7 @@ export async function initializeTree({api, workspace, begin = () => true, dirty,
     const source = dragging, target = drop;
     finishDrag();
     if (canDrag() && source && target) {
-      if (target.where === 'inside' && target.node) expanded.add(target.node.id);
+      if (target.where === 'inside' && target.node) rememberExpansion(target.node.id, true);
       move(source, target.parent, target.before);
     }
   }
@@ -239,8 +272,8 @@ export async function initializeTree({api, workspace, begin = () => true, dirty,
       row.addEventListener('dragstart',event=>{if(event.target.closest('.wiki-tree-delete, .wiki-tree-rename, .wiki-tree-rename-input') || !canDrag() || !guard()){event.preventDefault();return;} dragging=node.id;nav.classList.add('wiki-tree-dragging');event.dataTransfer.setData('text/plain',node.id);event.dataTransfer.effectAllowed='move';});
       row.addEventListener('dragend',finishDrag);
       if(node.kind==='folder') {
-        const toggle=button('', t("Expand ")+node.title,()=>{expanded.has(node.id)?expanded.delete(node.id):expanded.add(node.id);render();});
-        toggle.className='tree-toggle wiki-tree-folder'; toggle.setAttribute('aria-expanded',String(expanded.has(node.id)));
+        const toggle=button('', t("Expand ")+node.title,()=>{rememberExpansion(node.id, !expanded.has(node.id));render();});
+        toggle.dataset.section=node.id; toggle.dataset.title=node.title; toggle.className='tree-toggle wiki-tree-folder'; toggle.setAttribute('aria-expanded',String(expanded.has(node.id)));
         const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
         for(const [key,value] of Object.entries({class:'icon',width:'20',height:'20',viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.5','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))svg.setAttribute(key,value);
         const chevron=document.createElementNS('http://www.w3.org/2000/svg','path');chevron.setAttribute('d','m9 5 7 7-7 7');svg.append(chevron);
@@ -295,8 +328,19 @@ export async function initializeTree({api, workspace, begin = () => true, dirty,
     renaming?.cancel();
     clearConfirmation();
     if (!tree) return;
-    nav.querySelector('.nav-root')?.remove();
-    nav.append(list(tree.nodes));
+    captureExpansion();
+    const scrollTop = nav.scrollTop;
+    const focused = nav.ownerDocument.activeElement;
+    const focusId = focused?.matches('.tree-toggle[data-section]') ? normalize(focused.dataset.section) : null;
+    const root = nav.querySelector('.nav-root');
+    const replacement = list(tree.nodes);
+    if (root) root.replaceWith(replacement); else nav.append(replacement);
+    if (focusId !== null) {
+      for (const toggle of replacement.querySelectorAll('.tree-toggle[data-section]')) {
+        if (normalize(toggle.dataset.section) === focusId) toggle.focus({preventScroll:true});
+      }
+    }
+    nav.scrollTop = scrollTop;
   }
   function mountToolbar() {
     const root=document.createElement('div');root.className='wiki-tree-root';
@@ -308,6 +352,6 @@ export async function initializeTree({api, workspace, begin = () => true, dirty,
     root.addEventListener('drop',event=>{event.preventDefault();showDrop({row:root,where:'inside',parent:'',before:null},event);executeDrop();});nav.prepend(root);
   }
   mountToolbar();
-  const ready = loadTree().then(() => { for(const node of flatten(tree.nodes))if(node.kind==='folder' && currentPath().startsWith(node.id+'/'))expanded.add(node.id);render(); }).catch(e => error(e.message));
+  const ready = loadTree().then(() => { render(); }).catch(e => error(e.message));
   return {refresh, finishRename:async()=>renaming ? renaming.save() : renameSaving || true, render:()=>{ if (workspace) tree = workspace.tree() || tree; render(); }, reset:()=>{finishDrag();tree=undefined;return refresh();}, revision:()=>tree?.revision, ensureRevision, ready};
 }

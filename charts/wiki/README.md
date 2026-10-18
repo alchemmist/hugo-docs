@@ -54,7 +54,7 @@ The runtime supplies the canonical base URL to Hugo. Health checks always use `/
 Package custom assets in a derived image. No public URL or secret is needed at build time:
 
 ```dockerfile
-FROM ghcr.io/alchemmist/hugo-docs-wiki:0.3.5
+FROM ghcr.io/alchemmist/hugo-docs-wiki:0.3.6
 COPY --chown=1000:1000 team-logo.svg /opt/wiki/static/team-logo.svg
 ```
 

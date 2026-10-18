@@ -79,4 +79,4 @@ For the previous Socrat runtime, the existing content prefix is `wiki/content`, 
 
 Before any new write is accepted, rollback can switch routes back to the stopped old deployment and its retained volume, after stopping the new writer. Once the new runtime accepts writes, preserve and reconcile them before reopening the old installation. Merely switching the ingress at that point hides new content.
 
-Keep a pre-upgrade backup and test upgrades on a restored copy. Do not assume an older binary can open an account database or publication format changed by a newer version. The published v0.3.5 image and chart provide pinned release versions; schema compatibility and a successful restore rehearsal still determine whether rollback is safe.
+Keep a pre-upgrade backup and test upgrades on a restored copy. Do not assume an older binary can open an account database or publication format changed by a newer version. The published v0.3.6 image and chart provide pinned release versions; schema compatibility and a successful restore rehearsal still determine whether rollback is safe.

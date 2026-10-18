@@ -28,6 +28,7 @@ class Settings:
     public: bool
     bootstrap_secret: str
     live: bool
+    mcp_enabled: bool = False
 
     @property
     def base_path(self):
@@ -43,6 +44,9 @@ class Settings:
         storage = raw.get('storage', {})
         remote = raw.get('git', {})
         auth = raw.get('auth', {})
+        mcp = raw.get('mcp', {})
+        if not isinstance(mcp, dict) or ('enabled' in mcp and type(mcp['enabled']) is not bool):
+            raise ValueError('mcp.enabled must be a boolean')
         url = os.getenv('PUBLIC_ORIGIN', raw.get('url', 'http://localhost:8080')).rstrip('/')
         parsed = urlsplit(url)
         if parsed.scheme not in ('http', 'https') or not parsed.netloc or parsed.query or parsed.fragment or parsed.username or '..' in parsed.path.split('/'):
@@ -63,4 +67,4 @@ class Settings:
                 stream.flush()
                 os.fsync(stream.fileno())
         secret = secret_file.read_text().strip()
-        return cls(url, data, Path(os.getenv('WORK_DIR', str(data / 'repository'))), Path(os.getenv('LIVE_STATE_DIR', str(data / 'live'))), Path(os.getenv('LIVE_TEMPLATE_DIR', raw.get('site', '/opt/wiki'))), prefix, os.getenv('GIT_REPOSITORY', remote.get('repository', '')), os.getenv('GIT_BRANCH', remote.get('branch', 'main')), os.getenv('GIT_AUTHOR_NAME', remote.get('author', 'Wiki')), os.getenv('GIT_AUTHOR_EMAIL', remote.get('email', 'wiki@localhost')), boolean(os.getenv('WIKI_PUBLIC', raw.get('public', True))), secret, boolean(os.getenv('LIVE_MODE', 'true')))
+        return cls(url, data, Path(os.getenv('WORK_DIR', str(data / 'repository'))), Path(os.getenv('LIVE_STATE_DIR', str(data / 'live'))), Path(os.getenv('LIVE_TEMPLATE_DIR', raw.get('site', '/opt/wiki'))), prefix, os.getenv('GIT_REPOSITORY', remote.get('repository', '')), os.getenv('GIT_BRANCH', remote.get('branch', 'main')), os.getenv('GIT_AUTHOR_NAME', remote.get('author', 'Wiki')), os.getenv('GIT_AUTHOR_EMAIL', remote.get('email', 'wiki@localhost')), boolean(os.getenv('WIKI_PUBLIC', raw.get('public', True))), secret, boolean(os.getenv('LIVE_MODE', 'true')), boolean(os.getenv('WIKI_MCP_ENABLED', mcp.get('enabled', False))))

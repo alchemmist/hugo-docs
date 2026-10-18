@@ -24,6 +24,8 @@ with tempfile.TemporaryDirectory() as directory:
     command = [args.helm, 'template', 'check', str(root / 'charts/wiki'), '-f', str(values)]
     output = subprocess.check_output(command, text=True)
     resources = list(YAML(typ='safe').load_all(output))
+    config = next(item for item in resources if item['kind'] == 'ConfigMap' and 'wiki.yaml' in item.get('data', {}))
+    assert YAML(typ='safe').load(config['data']['wiki.yaml'])['mcp']['enabled'] is False
     static = next(item for item in resources if item['kind'] == 'ConfigMap' and item['metadata']['name'].endswith('-static'))
     key = hashlib.sha256(b'images/team.svg').hexdigest()
     assert static['data'][key] == logo
@@ -68,7 +70,14 @@ with tempfile.TemporaryDirectory() as directory:
             values.write_text(json.dumps({**base, field: {invalid: 'YQ=='}}))
             result = subprocess.run(command, capture_output=True, text=True)
             assert result.returncode != 0, (field, invalid)
+    values.write_text(json.dumps({**base, 'config': {'mcp': {'enabled': True}}}))
+    enabled_resources = list(YAML(typ='safe').load_all(subprocess.check_output(command, text=True)))
+    enabled_config = next(item for item in enabled_resources if item['kind'] == 'ConfigMap' and 'wiki.yaml' in item.get('data', {}))
+    assert YAML(typ='safe').load(enabled_config['data']['wiki.yaml'])['mcp']['enabled'] is True
     for invalid_values in [
+        {'config': {'mcp': {'enabled': 'false'}}},
+        {'config': {'mcp': {'enabled': 1}}},
+        {'config': {'mcp': {'enable': True}}},
         {'staticBinaryFiles': {binary_path: 'not base64'}},
         {'staticBinaryFiles': {binary_path: 'ZE=='}},
         {'staticFiles': {binary_path: logo}, 'staticBinaryFiles': {binary_path: 'YQ=='}},

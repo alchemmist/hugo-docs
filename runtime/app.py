@@ -1,4 +1,8 @@
 import hmac
+from contextlib import asynccontextmanager
+
+import anyio
+from starlette.routing import Route
 import json
 import os
 import posixpath
@@ -791,12 +795,37 @@ if LIVE_MODE:
     LIVE = LiveWiki(RuntimeServices(WORK, PREFIX, LOCK, ORIGIN, BRANCH, REPO, raw_git, tree_nodes, SETTINGS.git_author, SETTINGS.git_email), root=SETTINGS.state_dir, template=SETTINGS.template_dir)
     save = LIVE.transaction(save)
     publish_structure = LIVE.transaction(publish_structure)
-    app.add_event_handler('startup', LIVE.start)
-    app.add_event_handler('shutdown', LIVE.close)
 
 from auth import install_auth
 
-AUTH = install_auth(app, origin=ORIGIN, base_path=SETTINGS.base_path, data_dir=SETTINGS.data_dir, public=SETTINGS.public, bootstrap_secret=SETTINGS.bootstrap_secret, system_pages_dir=Path(os.getenv('WIKI_SYSTEM_PAGES_DIR', str(SETTINGS.state_dir / 'current' / 'system-pages'))))
+AUTH = install_auth(app, origin=ORIGIN, base_path=SETTINGS.base_path, data_dir=SETTINGS.data_dir, public=SETTINGS.public, bootstrap_secret=SETTINGS.bootstrap_secret, mcp_enabled=SETTINGS.mcp_enabled, system_pages_dir=Path(os.getenv('WIKI_SYSTEM_PAGES_DIR', str(SETTINGS.state_dir / 'current' / 'system-pages'))))
+
+
+MCP = None
+if SETTINGS.mcp_enabled:
+    from mcp_server import create_mcp
+    from wiki_service import WikiService
+    service = WikiService(lock=LOCK, sync=sync, tree=tree_result, read=read_page, batch=batch)
+    MCP, mcp_http = create_mcp(ORIGIN, service)
+    app.router.routes.extend([Route('/mcp', mcp_http, methods=['GET', 'POST', 'DELETE']), Route('/mcp/', mcp_http, methods=['GET', 'POST', 'DELETE'])])
+
+
+@asynccontextmanager
+async def lifespan(application):
+    if LIVE is not None:
+        await anyio.to_thread.run_sync(LIVE.start)
+    try:
+        if MCP is not None:
+            async with MCP.session_manager.run():
+                yield
+        else:
+            yield
+    finally:
+        if LIVE is not None:
+            await anyio.to_thread.run_sync(LIVE.close)
+
+
+app.router.lifespan_context = lifespan
 
 
 @app.middleware('http')

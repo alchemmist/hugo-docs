@@ -27,11 +27,11 @@ def run(*arguments):
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
 
-def request(path, data=None, headers=None):
+def request(path, data=None, headers=None, method=None):
     headers = {'Origin': base, **(headers or {})}
     if data is not None:
         headers['Content-Type'] = 'application/json'
-    value = urllib.request.Request(base + path, data=json.dumps(data).encode() if data is not None else None, headers=headers)
+    value = urllib.request.Request(base + path, data=json.dumps(data).encode() if data is not None else None, headers=headers, method=method)
     with opener.open(value, timeout=30) as response:
         return response.read()
 
@@ -50,7 +50,7 @@ def wait_for(path, expected=None):
 
 run('volume', 'create', volume)
 try:
-    run('run', '-d', '--name', name, '-p', f'127.0.0.1:{args.port}:8080', '-e', 'PUBLIC_ORIGIN=' + base + '/docs', '-v', volume + ':/data', args.image)
+    run('run', '-d', '--name', name, '-p', f'127.0.0.1:{args.port}:8080', '-e', 'PUBLIC_ORIGIN=' + base + '/docs', '-e', 'WIKI_MCP_ENABLED=true', '-v', volume + ':/data', args.image)
     wait_for('/healthz')
     assert b'Your wiki' in request('/docs/')
     login = request('/docs/login').decode()
@@ -81,13 +81,58 @@ try:
     assert 'wiki-admin' in admin
     session = json.loads(request('/docs/api/editor/session'))
     assert session['writable']
+    csrf = {'X-CSRF-Token': session['csrf_token']}
+    personal = json.loads(request('/docs/api/auth/tokens', {'name': 'Container acceptance', 'read_only': True}, csrf))
+
+    protocol_version = '2025-11-25'
+
+    def rpc(method, params):
+        response = json.loads(request('/docs/mcp', {
+            'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params,
+        }, {
+            'Authorization': 'Bearer ' + personal['token'],
+            'Accept': 'application/json, text/event-stream',
+            'MCP-Protocol-Version': protocol_version,
+        }))
+        assert 'error' not in response, response
+        return response['result']
+
+    initialized = rpc('initialize', {
+        'protocolVersion': '2025-11-25', 'capabilities': {},
+        'clientInfo': {'name': 'container-acceptance', 'version': '1'},
+    })
+    protocol_version = initialized['protocolVersion']
+    request('/docs/mcp', {
+        'jsonrpc': '2.0', 'method': 'notifications/initialized',
+    }, {
+        'Authorization': 'Bearer ' + personal['token'],
+        'Accept': 'application/json, text/event-stream',
+        'MCP-Protocol-Version': protocol_version,
+    })
+    assert 'tools' in initialized['capabilities']
+    assert 'wiki_read_page' in {tool['name'] for tool in rpc('tools/list', {})['tools']}
+    result = rpc('tools/call', {'name': 'wiki_read_page', 'arguments': {'path': '_index.md'}})
+    assert not result.get('isError'), result
+    assert result['structuredContent']['path'] == '_index.md'
+    denied = rpc('tools/call', {'name': 'wiki_create_page', 'arguments': {
+        'section': '', 'slug': 'forbidden', 'title': 'Forbidden', 'body': 'Denied',
+    }})
+    assert denied.get('isError'), denied
+    assert '403' in denied['content'][0]['text'], denied
+    request('/docs/api/auth/tokens/' + personal['id'], headers=csrf, method='DELETE')
+    try:
+        rpc('tools/list', {})
+    except urllib.error.HTTPError as error:
+        assert error.code == 401
+    else:
+        raise AssertionError('Revoked MCP token was accepted')
     page = json.loads(request('/docs/api/editor/pages?path=_index.md'))
     page['body'] = 'Container publication acceptance.'
     request('/docs/api/editor/batch', {'pages': [page]}, {'X-CSRF-Token': session['csrf_token']})
     assert b'Container publication acceptance.' in request('/docs/')
     run('restart', name)
     wait_for('/docs/', b'Container publication acceptance.')
-    print('Container acceptance passed: fresh volume, subpath health, public read, bootstrap/login, publication, restart persistence')
+    print('Container acceptance passed: fresh volume, subpath health, public read, bootstrap/login, MCP discovery/read/read-only/revocation, publication, restart persistence')
 except Exception:
     subprocess.run([args.engine, 'logs', name], check=False)
     raise

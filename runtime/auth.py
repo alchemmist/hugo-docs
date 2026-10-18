@@ -108,6 +108,13 @@ class AuthStore:
                     token TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),
                     csrf TEXT NOT NULL, expires REAL NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS api_tokens (
+                    id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE,
+                    user_id TEXT NOT NULL REFERENCES users(id), name TEXT NOT NULL,
+                    created_at REAL NOT NULL, expires_at REAL NOT NULL,
+                    read_only INTEGER NOT NULL DEFAULT 0
+                );
+                CREATE INDEX IF NOT EXISTS api_tokens_user ON api_tokens(user_id);
                 CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
                 INSERT OR IGNORE INTO metadata VALUES ('schema_version', '1');
             ''')
@@ -194,6 +201,55 @@ class AuthStore:
         with self.connect() as db:
             db.execute('DELETE FROM sessions WHERE token=?', (self.digest(token),))
 
+    def token_metadata(self, row):
+        return {**{key: row[key] for key in ('id', 'name', 'created_at', 'expires_at')},
+                'read_only': bool(row['read_only'])}
+
+    def create_token(self, user_id, name, expires_days=90, read_only=False):
+        if not isinstance(name, str) or not name.strip() or len(name) > 100:
+            raise HTTPException(422, 'Token name must contain 1 to 100 characters')
+        if type(expires_days) is not int or not 1 <= expires_days <= 365:
+            raise HTTPException(422, 'Token expiry must be between 1 and 365 days')
+        if type(read_only) is not bool:
+            raise HTTPException(422, 'Read only must be a boolean')
+        now = time.time()
+        token = 'wiki_' + secrets.token_urlsafe(48)
+        token_id = secrets.token_hex(16)
+        with self.lock, self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            if not db.execute('SELECT 1 FROM users WHERE id=? AND disabled=0', (user_id,)).fetchone():
+                raise HTTPException(404, 'Active user not found')
+            db.execute('DELETE FROM api_tokens WHERE user_id=? AND expires_at<=?', (user_id, now))
+            if db.execute('SELECT COUNT(*) FROM api_tokens WHERE user_id=?', (user_id,)).fetchone()[0] >= 50:
+                raise HTTPException(409, 'Maximum of 50 active tokens reached')
+            db.execute('INSERT INTO api_tokens VALUES (?, ?, ?, ?, ?, ?, ?)',
+                       (token_id, self.digest(token), user_id, name.strip(), now, now + expires_days * 86400, read_only))
+            row = db.execute('SELECT * FROM api_tokens WHERE id=?', (token_id,)).fetchone()
+            return {**self.token_metadata(row), 'token': token}
+
+    def list_tokens(self, user_id):
+        with self.connect() as db:
+            return [self.token_metadata(row) for row in db.execute(
+                'SELECT * FROM api_tokens WHERE user_id=? AND expires_at>? ORDER BY created_at DESC',
+                (user_id, time.time()))]
+
+    def revoke_token(self, user_id, token_id):
+        with self.connect() as db:
+            if not db.execute('DELETE FROM api_tokens WHERE id=? AND user_id=?', (token_id, user_id)).rowcount:
+                raise HTTPException(404, 'Token not found')
+
+    def token_session(self, raw):
+        if not isinstance(raw, str) or not re.fullmatch(r'wiki_[A-Za-z0-9_-]{64}', raw):
+            return None
+        with self.connect() as db:
+            row = db.execute(
+                'SELECT users.*, api_tokens.id AS token_id, api_tokens.read_only FROM api_tokens '
+                'JOIN users ON users.id=api_tokens.user_id '
+                'WHERE api_tokens.token_hash=? AND api_tokens.expires_at>? AND users.disabled=0',
+                (self.digest(raw), time.time())).fetchone()
+            return {'user': self.public_user(row), 'token_id': row['token_id'],
+                    'read_only': bool(row['read_only'])} if row else None
+
     def update_user(self, user_id, *, role=None, disabled=None, password=None):
         if role is not None and (not isinstance(role, str) or role not in ROLES):
             raise HTTPException(422, 'Invalid role')
@@ -215,10 +271,11 @@ class AuthStore:
             db.execute('UPDATE users SET role=?, disabled=?, password=? WHERE id=?',
                        (next_role, next_disabled, PASSWORD_HASHER.hash(password) if password is not None else row['password'], user_id))
             db.execute('DELETE FROM sessions WHERE user_id=?', (user_id,))
+            db.execute('DELETE FROM api_tokens WHERE user_id=?', (user_id,))
             return self.public_user(db.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone())
 
 
-def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_secret='', session_seconds=28800, system_pages_dir=None):
+def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_secret='', session_seconds=28800, system_pages_dir=None, mcp_enabled=False):
     pages = SystemPages(system_pages_dir or os.getenv('WIKI_SYSTEM_PAGES_DIR', '/opt/wiki-system'))
     parsed = urlsplit(origin)
     allowed_origin = parsed.scheme + '://' + parsed.netloc
@@ -277,6 +334,24 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
         path = request.url.path
         if prefix and (path == prefix or path.startswith(prefix + '/')):
             path = path[len(prefix):] or '/'
+        if path in ('/mcp', '/mcp/'):
+            if not mcp_enabled:
+                return JSONResponse({'detail': 'Not found'}, status_code=404)
+            if 'origin' in request.headers and request.headers['origin'] != allowed_origin:
+                return JSONResponse({'detail': 'Invalid request origin'}, status_code=403)
+            authorization = request.headers.get('authorization', '')
+            scheme, _, raw = authorization.partition(' ')
+            token_auth = store.token_session(raw) if scheme.lower() == 'bearer' else None
+            if not token_auth:
+                return JSONResponse({'detail': 'Valid bearer token required'}, status_code=401,
+                                    headers={'WWW-Authenticate': 'Bearer', 'Cache-Control': 'no-store'})
+            request.state.auth = token_auth
+            response = await call_next(request)
+            response.headers['Cache-Control'] = 'no-store'
+            return response
+        token_route = path == '/api/auth/tokens' or path.startswith('/api/auth/tokens/')
+        if token_route and not mcp_enabled:
+            return JSONResponse({'detail': 'Not found'}, status_code=404)
         asset = pages.assets.get(path) if Path(path).suffix.lower() in ('.css', '.js', '.woff', '.woff2', '.ttf', '.otf', '.svg', '.png', '.ico') else None
         if asset is not None and request.method in ('GET', 'HEAD'):
             cache = 'public, max-age=31536000, immutable' if re.search(r'[.-][a-f0-9]{32,128}\.', path) else 'no-store'
@@ -290,6 +365,8 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
         admin_route = path == '/api/admin' or path.startswith('/api/admin/')
         allowed_public = path in ('/healthz', '/login', '/login/') or auth_route
         try:
+            if token_route and not session:
+                raise HTTPException(401, 'Sign in required')
             if ((editor_route and path != '/api/editor/session') or admin_route or (not public and not allowed_public and path != '/api/editor/session')) and not session:
                 raise HTTPException(401, 'Sign in required')
             if editor_route and path != '/api/editor/session' and session['user']['role'] not in ('editor', 'admin'):
@@ -314,7 +391,8 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
 
     def session_response(session):
         return {**session, 'csrf': session['csrf_token'],
-                'writable': session['user']['role'] in ('editor', 'admin')}
+                'writable': session['user']['role'] in ('editor', 'admin'),
+                'mcp_enabled': mcp_enabled, 'mcp_url': allowed_origin + prefix + '/mcp' if mcp_enabled else None}
 
     @app.get('/login', response_class=HTMLResponse)
     @app.get('/login/', response_class=HTMLResponse)
@@ -335,7 +413,8 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
     async def current(request: Request):
         if not request.state.auth:
             return {'user': None, 'writable': False, 'csrf_token': None, 'csrf': None,
-                    'bootstrap_required': not bool(store.list_users())}
+                    'bootstrap_required': not bool(store.list_users()),
+                    'mcp_enabled': mcp_enabled, 'mcp_url': allowed_origin + prefix + '/mcp' if mcp_enabled else None}
         return session_response(request.state.auth)
 
     @app.post('/api/auth/login')
@@ -372,6 +451,28 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
         store.logout(token)
         store.validate('user', body.get('password'), 'reader')
         store.update_user(session['user']['id'], password=body['password'])
+        return {'ok': True}
+
+    def token_user(request):
+        if not mcp_enabled:
+            raise HTTPException(404, 'Not found')
+        if not request.state.auth or 'csrf_token' not in request.state.auth:
+            raise HTTPException(401, 'Sign in required')
+        return request.state.auth['user']['id']
+
+    @app.get('/api/auth/tokens')
+    async def tokens(request: Request):
+        return {'tokens': store.list_tokens(token_user(request))}
+
+    @app.post('/api/auth/tokens')
+    async def create_personal_token(request: Request):
+        user_id = token_user(request)
+        body = await payload(request)
+        return store.create_token(user_id, body.get('name'), body.get('expires_days', 90), body.get('read_only', False))
+
+    @app.delete('/api/auth/tokens/{token_id}')
+    async def revoke_personal_token(token_id: str, request: Request):
+        store.revoke_token(token_user(request), token_id)
         return {'ok': True}
 
     @app.get('/api/admin/users')

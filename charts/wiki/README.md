@@ -54,7 +54,7 @@ The runtime supplies the canonical base URL to Hugo. Health checks always use `/
 Package custom assets in a derived image. No public URL or secret is needed at build time:
 
 ```dockerfile
-FROM ghcr.io/alchemmist/hugo-docs-wiki:0.2.9
+FROM ghcr.io/alchemmist/hugo-docs-wiki:0.3.0
 COPY --chown=1000:1000 team-logo.svg /opt/wiki/static/team-logo.svg
 ```
 
@@ -70,3 +70,21 @@ staticFiles:
 ```
 
 Set `params.docs.logo = 'images/team.svg'` in `siteConfig`. Each file is mounted separately below `/opt/wiki/static` using a read-only subPath bind. This avoids ConfigMap directory symlinks, which Hugo does not publish; module-provided static assets remain available. Paths must be relative, with no hidden components, `..`, backslashes or empty segments. Values must be UTF-8 text. Keep the total under Kubernetes' 1 MiB ConfigMap limit. Binary assets can use `staticBinaryFiles` with the same safe paths and base64-encoded values; they are projected through ConfigMap `binaryData` with the same per-file mounts. A path cannot appear in both maps. Use a custom image for larger assets and compiled plugins. Static asset changes trigger a rollout.
+
+## MCP access
+
+Enable the authenticated MCP endpoint with one setting:
+
+```sh
+helm upgrade --install docs ./charts/wiki -f values.yaml --set config.mcp.enabled=true
+```
+
+Or add this to your existing values:
+
+```yaml
+config:
+  mcp:
+    enabled: true
+```
+
+The endpoint is the configured `publicURL` plus `/mcp`. Each user creates a personal token under **MCP access** on `/admin`; token secrets belong in the agent’s secret storage, never in chart values. The feature defaults to disabled. See [MCP setup and permissions](../../docs/mcp.md) for supported clients, roles and publication behavior.

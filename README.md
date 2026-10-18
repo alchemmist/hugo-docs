@@ -6,15 +6,15 @@ Folders expand in the sidebar; only notes have pages. Search, breadcrumbs, and p
 
 ## Start an editable wiki
 
-Release [v0.2.9](https://github.com/alchemmist/hugo-docs/releases/tag/v0.2.9) includes a public runtime image and Helm chart. With Docker Compose installed:
+Release [v0.3.0](https://github.com/alchemmist/hugo-docs/releases/tag/v0.3.0) includes a public runtime image and Helm chart. With Docker Compose installed:
 
 ```sh
-git clone --branch v0.2.9 https://github.com/alchemmist/hugo-docs.git
+git clone --branch v0.3.0 https://github.com/alchemmist/hugo-docs.git
 cd hugo-docs
 docker compose -f compose.wiki.yaml up -d --no-build
 ```
 
-This starts the published `ghcr.io/alchemmist/hugo-docs-wiki:0.2.9` image without a local build. To build your own image from this checkout instead, run `make wiki-up`.
+This starts the published `ghcr.io/alchemmist/hugo-docs-wiki:0.3.0` image without a local build. To build your own image from this checkout instead, run `make wiki-up`.
 
 Open <http://localhost:8080/login> and create the first administrator. Read the one-time bootstrap token locally:
 
@@ -23,6 +23,8 @@ docker compose -f compose.wiki.yaml exec wiki cat /data/bootstrap-token
 ```
 
 Keep that token private. The default site is neutral, reading is public, editing requires a local account, and content persists in the `wiki-data` volume. No Git remote, Kubernetes or OIDC is required. Do not remove the volume when stopping the service.
+
+Optional [MCP access](docs/mcp.md) lets agents read and publish notes as a local user. Enable it with `mcp.enabled: true` and create a personal token on `/admin`.
 
 See [runtime configuration and accounts](docs/runtime.md), [backup and migration](docs/migration.md), and [editor plugins](docs/plugins.md). For a static site without a backend, use the workflow below.
 
@@ -49,7 +51,7 @@ Initialize a Hugo module if your project does not already have `go.mod`:
 
 ```sh
 hugo mod init example.com/my-docs
-hugo mod get github.com/alchemmist/hugo-docs@v0.2.9
+hugo mod get github.com/alchemmist/hugo-docs@v0.3.0
 ```
 
 Configure `hugo.toml`:

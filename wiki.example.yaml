@@ -11,3 +11,5 @@ git:
   email: wiki@localhost
 auth:
   bootstrap_secret_file: /data/bootstrap-token
+mcp:
+  enabled: false

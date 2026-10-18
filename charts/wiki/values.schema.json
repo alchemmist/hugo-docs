@@ -18,7 +18,18 @@
       "pattern": "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$"
     },
     "config": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "mcp": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
     },
     "siteConfig": {
       "type": "string"

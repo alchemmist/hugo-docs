@@ -55,7 +55,7 @@ test('password forms associate the correct username without sending it in passwo
   const {root,calls} = setup('admin', path => path.endsWith('/users') ? {users:[{id:2,username:'bob',role:'reader',disabled:false}]} : undefined);
   await mountAdmin(root);
   const own = root.querySelector('form');
-  const reset = root.querySelector('.wiki-admin-user form');
+  const reset = root.querySelector('.wiki-admin-user-reset form');
   assert.equal(own.elements.username.value,'alice');
   assert.equal(reset.elements.username.value,'bob');
   for (const form of [own,reset]) { assert.equal(form.method,'post'); assert.equal(form.elements.username.autocomplete,'username'); assert.equal(form.elements.username.hidden,true); }
@@ -91,7 +91,7 @@ test('section deep links and history preserve form drafts', async () => {
   view.history.replaceState(null,'','#users');
   await mountAdmin(root);
   assert.equal(root.querySelector('[aria-current="page"]').hash,'#users');
-  const create = root.querySelector('#admin-users > form');
+  const create = root.querySelector('.wiki-admin-create form');
   create.elements.username.value = 'draft-user';
   view.history.pushState(null,'','#account'); view.dispatchEvent(new view.HashChangeEvent('hashchange'));
   assert.equal(root.querySelector('#admin-account').hidden,false);
@@ -138,4 +138,62 @@ test('switching sections keeps a newly issued MCP token', async () => {
   activate('account');activate('mcp');
   assert.equal(root.querySelector('.wiki-mcp-secret input'),secret);
   assert.equal(secret.value,'wiki_personal_secret');
+});
+
+test('users appear as compact semantic rows with collapsed creation and reset forms', async () => {
+  const {root,calls} = setup('admin', path => path.endsWith('/users') ? {users:[{id:2,username:'bob',role:'reader',disabled:false},{id:3,username:'eve',role:'editor',disabled:true}]} : undefined);
+  await mountAdmin(root);
+  const table=root.querySelector('table.wiki-users-table');
+  assert.deepEqual([...table.querySelectorAll('thead th')].map(cell=>[cell.scope,cell.textContent]),[['col','Username'],['col','Role'],['col','Status'],['col','Actions']]);
+  assert.deepEqual([...table.querySelectorAll('tbody th')].map(cell=>[cell.scope,cell.textContent]),[['row','bob'],['row','eve']]);
+  assert.equal(table.querySelectorAll('.wiki-admin-user').length,2);
+  assert.equal(root.querySelector('.wiki-admin-create').open,false);
+  const rows=[...table.querySelectorAll('.wiki-admin-user-reset')];
+  assert.ok(rows.every(row=>row.hidden && row.firstChild.colSpan === 4));
+  const toggles=[...table.querySelectorAll('[aria-controls]')];
+  toggles[0].click();
+  assert.equal(toggles[0].getAttribute('aria-expanded'),'true');
+  assert.equal(rows[0].hidden,false);
+  const input=rows[0].querySelector('[name=password]');
+  assert.equal(document.activeElement,input);
+  input.value='draft-password';
+  toggles[1].click(); toggles[0].click(); toggles[0].click();
+  assert.equal(rows[1].hidden,false);
+  assert.equal(input.value,'draft-password');
+  assert.equal(calls.some(call=>call.options.method !== 'GET'),false);
+  rows[0].querySelector('form').dispatchEvent(new document.defaultView.Event('submit',{cancelable:true})); await tick();
+  assert.equal(rows[0].hidden,true);
+  assert.equal(toggles[0].getAttribute('aria-expanded'),'false');
+  assert.equal(input.value,'');
+  assert.equal(document.activeElement,toggles[0]);
+});
+
+test('role failure restores saved role and reset failure retains visible password draft', async () => {
+  const {root} = setup('admin', path => path.endsWith('/users') ? {users:[{id:2,username:'bob',role:'reader',disabled:false}]} : undefined);
+  await mountAdmin(root);
+  globalThis.fetch=async()=>({ok:false,json:async()=>({detail:'Forbidden'})});
+  const select=root.querySelector('.wiki-users-table select');
+  assert.equal(select.getAttribute('aria-label'),'Role: bob');
+  select.value='admin'; select.dispatchEvent(new document.defaultView.Event('change')); await tick();
+  assert.equal(select.value,'reader'); assert.equal(select.disabled,false);
+  const toggle=root.querySelector('.wiki-users-table [aria-controls]'); toggle.click();
+  const details=root.querySelector('.wiki-admin-user-reset'), form=details.querySelector('form');
+  form.elements.password.value='keep-this-password';
+  form.dispatchEvent(new document.defaultView.Event('submit',{cancelable:true})); await tick();
+  assert.equal(details.hidden,false);assert.equal(form.elements.password.value,'keep-this-password');
+  assert.ok(form.querySelector('[role=status]').textContent);
+  assert.equal(form.querySelector('button').disabled,false);
+});
+
+test('disabling a user refreshes the status and action', async () => {
+  let disabled=false;
+  const {root,calls}=setup('admin',(path,options)=>{
+    if(path.endsWith('/users/2')) { disabled=JSON.parse(options.body).disabled; return {}; }
+    if(path.endsWith('/users')) return {users:[{id:2,username:'bob',role:'reader',disabled}]};
+  });
+  await mountAdmin(root);
+  root.querySelector('.wiki-admin-user-actions button').click();await tick();
+  assert.equal(root.querySelector('.wiki-admin-user-state').textContent,'Disabled');
+  assert.equal(root.querySelector('.wiki-admin-user-actions button').textContent,'Enable');
+  assert.ok(calls.some(call=>call.options.method === 'PATCH'));
 });

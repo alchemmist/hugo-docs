@@ -19,15 +19,25 @@
 .wiki-admin-status { font: 14px/1.5 var(--ui); overflow-wrap: anywhere; margin: 12px 0; }
 .wiki-admin-status:empty { display: none; }
 .wiki-admin-sync { overflow-wrap: anywhere; font: 16px/1.6 var(--prose); }
-.wiki-admin-user { padding: 24px 0; border-bottom: 1px solid var(--rule); }
-.wiki-admin-user:first-child { padding-top: 0; }
-.wiki-admin-user:last-child { margin-bottom: 20px; }
-.wiki-admin-user-state { margin: 4px 0 16px; color: var(--muted); font-size: 13px; }
-.wiki-admin-user-controls { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 16px; }
-.wiki-admin-user-controls label { flex: 1 1 180px; max-width: 280px; }
-.wiki-admin-user .wiki-admin-form { grid-template-columns: minmax(0, 1fr) auto; max-width: none; align-items: end; }
-.wiki-admin-user .wiki-admin-status { grid-column: 1 / -1; }
-@media (max-width: 480px) { .wiki-admin-user .wiki-admin-form { grid-template-columns: minmax(0, 1fr); } }
+#wiki-admin .wiki-users-table-wrap { max-width: 100%; overflow-x: auto; }
+.wiki-users-table { width: 100%; min-width: 540px; border-collapse: collapse; text-align: left; font: 13px/1.5 var(--ui); }
+.wiki-users-table th, .wiki-users-table td { padding: 11px 12px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.wiki-users-table th:first-child, .wiki-users-table td:first-child { padding-left: 0; }
+.wiki-users-table th:last-child, .wiki-users-table td:last-child { padding-right: 0; }
+.wiki-users-table thead th { color: var(--muted); font-size: 11px; font-weight: 400; padding-top: 0; padding-bottom: 9px; }
+.wiki-users-table tbody th { font-weight: 400; overflow-wrap: anywhere; max-width: 220px; }
+.wiki-admin-user-state { color: var(--muted); white-space: nowrap; font-size: 12px; }
+#wiki-admin .wiki-users-table select { width: auto; max-width: 160px; min-height: 32px; padding: 4px 6px; border-color: transparent; font-size: 13px; }
+#wiki-admin .wiki-users-table select:hover { border-color: var(--rule); }
+#wiki-admin .wiki-users-table button { min-height: 32px; padding: 4px 0; border: 0; background: transparent; color: var(--muted); font-size: 12px; }
+#wiki-admin .wiki-users-table button:hover { color: var(--ink); text-decoration: underline; }
+.wiki-admin-user-actions { white-space: nowrap; }
+.wiki-admin-user-actions button + button { margin-left: 14px; }
+.wiki-admin-user-reset td { padding: 16px 0 24px; }
+.wiki-admin-user-reset .wiki-admin-form { max-width: 440px; }
+.wiki-admin-create { margin-top: 24px; }
+.wiki-admin-create > summary { width: fit-content; cursor: pointer; font: 13px/1.5 var(--ui); color: var(--ink); }
+.wiki-admin-create > .wiki-admin-form { margin-top: 20px; }
 @media (max-width: 600px) { .wiki-system-shell { padding: 24px 20px; } .wiki-system-header { margin-bottom: 40px; } }
 .wiki-mcp > p, .wiki-mcp-secret > p { font: 14px/1.6 var(--ui); }
 .wiki-mcp-value { display: flex; gap: 12px; align-items: end; margin: 16px 0; }

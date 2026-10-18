@@ -4,8 +4,8 @@ import {mountMcpTokens} from './mcp-tokens.js';
 const mounts = new WeakMap();
 
 const words = {
-  en: {settings:'Settings',sections:'Settings sections',mcp:'MCP access',account:'Account',password:'Password',current:'Current password',next:'New password',change:'Change password',logout:'Sign out',username:'Username',role:'Role',reader:'Reader',editor:'Editor',admin:'Administrator',users:'Users',create:'Create user',disable:'Disable',enable:'Enable',reset:'Reset password',saved:'Saved',failed:'Request failed. Please try again.',loading:'Loading…',retry:'Try again',sync:'Git synchronization',syncDisabled:'Disabled',syncReady:'Up to date',syncPending:'Pending changes',syncError:'Synchronization failed',refresh:'Refresh',empty:'No users',disabled:'Disabled',active:'Active',required:'Enter a new password.'},
-  ru: {settings:'Настройки',sections:'Разделы настроек',mcp:'Доступ по MCP',account:'Аккаунт',password:'Пароль',current:'Текущий пароль',next:'Новый пароль',change:'Сменить пароль',logout:'Выйти',username:'Логин',role:'Роль',reader:'Читатель',editor:'Редактор',admin:'Администратор',users:'Пользователи',create:'Создать пользователя',disable:'Отключить',enable:'Включить',reset:'Сбросить пароль',saved:'Сохранено',failed:'Не удалось выполнить запрос. Повторите попытку.',loading:'Загрузка…',retry:'Повторить',sync:'Синхронизация Git',syncDisabled:'Отключена',syncReady:'Все изменения отправлены',syncPending:'Ожидают отправки',syncError:'Ошибка синхронизации',refresh:'Обновить',empty:'Нет пользователей',disabled:'Отключён',active:'Активен',required:'Введите новый пароль.'}
+  en: {settings:'Settings',sections:'Settings sections',mcp:'MCP access',account:'Account',password:'Password',current:'Current password',next:'New password',change:'Change password',logout:'Sign out',username:'Username',status:'Status',actions:'Actions',role:'Role',reader:'Reader',editor:'Editor',admin:'Administrator',users:'Users',create:'Create user',disable:'Disable',enable:'Enable',reset:'Reset password',saved:'Saved',failed:'Request failed. Please try again.',loading:'Loading…',retry:'Try again',sync:'Git synchronization',syncDisabled:'Disabled',syncReady:'Up to date',syncPending:'Pending changes',syncError:'Synchronization failed',refresh:'Refresh',empty:'No users',disabled:'Disabled',active:'Active',required:'Enter a new password.'},
+  ru: {settings:'Настройки',sections:'Разделы настроек',mcp:'Доступ по MCP',account:'Аккаунт',password:'Пароль',current:'Текущий пароль',next:'Новый пароль',change:'Сменить пароль',logout:'Выйти',username:'Логин',status:'Статус',actions:'Действия',role:'Роль',reader:'Читатель',editor:'Редактор',admin:'Администратор',users:'Пользователи',create:'Создать пользователя',disable:'Отключить',enable:'Включить',reset:'Сбросить пароль',saved:'Сохранено',failed:'Не удалось выполнить запрос. Повторите попытку.',loading:'Загрузка…',retry:'Повторить',sync:'Синхронизация Git',syncDisabled:'Отключена',syncReady:'Все изменения отправлены',syncPending:'Ожидают отправки',syncError:'Ошибка синхронизации',refresh:'Обновить',empty:'Нет пользователей',disabled:'Отключён',active:'Активен',required:'Введите новый пароль.'}
 };
 
 export async function mountAdmin(root, navigate = url => location.assign(url)) {
@@ -146,13 +146,25 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
   const refresh = async () => {
     const data = await request('admin/users');
     list.replaceChildren();
-    if (!data.users.length) list.append(node('p', text.empty));
-    for (const user of data.users) {
-      const row = node('div', '', 'wiki-admin-user');
-      row.append(node('h3', user.username));
-      row.append(node('p', user.disabled ? text.disabled : text.active, 'wiki-admin-user-state'));
-      const controls = node('div', '', 'wiki-admin-user-controls'); row.append(controls);
-      const select = roles(controls, user.role);
+    if (!data.users.length) { list.append(node('p', text.empty)); return; }
+    const wrap = node('div', '', 'wiki-users-table-wrap');
+    wrap.tabIndex = 0; wrap.setAttribute('role', 'region'); wrap.setAttribute('aria-label', text.users);
+    const table = node('table', '', 'wiki-users-table'); table.setAttribute('aria-label', text.users);
+    const head = node('thead'); const headings = node('tr');
+    for (const label of [text.username,text.role,text.status,text.actions]) {
+      const cell = node('th', label); cell.scope = 'col'; headings.append(cell);
+    }
+    head.append(headings); const body = node('tbody'); table.append(head,body); wrap.append(table); list.append(wrap);
+    for (const [index, user] of data.users.entries()) {
+      const row = node('tr', '', 'wiki-admin-user');
+      const name = node('th', user.username); name.scope = 'row'; row.append(name);
+      const role = node('td'); role.dataset.label = text.role; row.append(role);
+      const select = roles(role, user.role);
+      select.setAttribute('aria-label', text.role + ': ' + user.username);
+      role.replaceChildren(select);
+      const state = node('td'); state.dataset.label = text.status;
+      state.append(node('span', user.disabled ? text.disabled : text.active, 'wiki-admin-user-state')); row.append(state);
+      const controls = node('td', '', 'wiki-admin-user-actions'); controls.dataset.label = text.actions; row.append(controls);
       select.addEventListener('change', async () => {
         select.disabled = true; listStatus.textContent = '';
         try { await request('admin/users/' + encodeURIComponent(user.id), {role:select.value}, 'PATCH'); user.role = select.value; listStatus.textContent = text.saved; }
@@ -162,14 +174,29 @@ export async function mountAdmin(root, navigate = url => location.assign(url)) {
       controls.append(action(user.disabled ? text.enable : text.disable, async () => {
         await request('admin/users/' + encodeURIComponent(user.id), {disabled:!user.disabled}, 'PATCH'); await refresh();
       }, listStatus));
-      form(row, text.reset, [['password',text.next,'password']], data => request('admin/users/' + encodeURIComponent(user.id) + '/password', data), false, user.username);
-      list.append(row);
+      const details = node('tr', '', 'wiki-admin-user-reset'); details.hidden = true;
+      details.id = 'wiki-user-reset-' + index;
+      const cell = node('td'); cell.colSpan = 4; details.append(cell);
+      const toggle = node('button', text.reset); toggle.type = 'button';
+      toggle.setAttribute('aria-label', text.reset + ': ' + user.username);
+      toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-controls', details.id);
+      toggle.addEventListener('click', () => {
+        details.hidden = !details.hidden; toggle.setAttribute('aria-expanded', String(!details.hidden));
+        if (!details.hidden) reset.elements.password.focus();
+      });
+      controls.append(toggle);
+      const reset = form(cell, text.reset, [['password',text.next,'password']], async data => {
+        await request('admin/users/' + encodeURIComponent(user.id) + '/password', data);
+        details.hidden = true; toggle.setAttribute('aria-expanded', 'false'); toggle.focus(); listStatus.textContent = text.saved;
+      }, false, user.username);
+      reset.elements.password.setAttribute('aria-label', text.next + ': ' + user.username);
+      body.append(row, details);
     }
   };
   const load = async () => { listStatus.textContent = text.loading; try { await refresh(); listStatus.textContent = ''; } catch (error) { listStatus.textContent = error.message; } };
   users.append(action(text.refresh, load, listStatus));
-  users.append(node('h3', text.create));
-  form(users, text.create, [['username',text.username],['password',text.password,'password']], async data => { await request('admin/users', data); await refresh(); }, true);
+  const create = node('details', '', 'wiki-admin-create'); create.append(node('summary', text.create)); users.append(create);
+  form(create, text.create, [['username',text.username],['password',text.password,'password']], async data => { await request('admin/users', data); await refresh(); }, true);
   loading.push(load());
   await Promise.all(loading);
   return session;

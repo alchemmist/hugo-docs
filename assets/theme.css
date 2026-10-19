@@ -1,77 +1,68 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #202323;
-  --surface: #272b2b;
-  --raised: #2e3333;
-  --ink: #c9cfcb;
-  --muted: #969f9b;
-  --blue: #a0b5d1;
-  --rule: #3b4340;
-  --control: #75817c;
-  --active: #303b40;
+  --paper: #171717;
+  --surface: #1f1f1f;
+  --raised: #262626;
+  --ink: #c8c8c8;
+  --muted: #9c9c9c;
+  --blue: #bdbdbd;
+  --rule: #414141;
+  --control: #808080;
+  --active: #2b2b2b;
   background: var(--paper);
   color: var(--ink);
 }
 html[data-theme="dark"] body { background: var(--paper); }
-html[data-theme="dark"] :is(h1,h2,h3,h4) { color: #d6dcd8; }
+html[data-theme="dark"] :is(h1,h2,h3,h4) { color: #d5d5d5; }
 html[data-theme="dark"] :is(.skip-link,.search-trigger,.mobile-header,.sidebar,.wiki-editbar,.wiki-tree-create button,.wiki-tree-create input,.wiki-tree-create select,.wiki-link-form input,.wiki-editbar button) { background: var(--paper); color: var(--ink); border-color: var(--rule); }
-html[data-theme="dark"] :is(.page-description,.search-result-excerpt) { color: #afb8b2; }
+html[data-theme="dark"] :is(.page-description,.search-result-excerpt) { color: #b0b0b0; }
 html[data-theme="dark"] :is(.nav-row:has(> a[aria-current]),.home-link[aria-current],.wiki-admin-nav a[aria-current="page"]) { background: var(--active); color: var(--ink); }
 html[data-theme="dark"] :is(.icon-button:hover,.wiki-formatbar button:hover,.wiki-admin-nav a:hover,.search-result:hover,#search-results [aria-selected="true"] .search-result) { background: var(--raised); color: var(--ink); }
 html[data-theme="dark"] :is(.wiki-formatbar button[aria-pressed="true"],[data-drop="inside"]) { background: var(--active); color: var(--blue); }
-html[data-theme="dark"] #search-dialog { background: var(--surface); border-color: #4b5550; color: var(--ink); box-shadow: 0 20px 70px #0005; }
-html[data-theme="dark"] #search-dialog::backdrop { background: #10141499; }
-html[data-theme="dark"] .nav-backdrop { background: #10141488; }
+html[data-theme="dark"] #search-dialog { background: var(--surface); border-color: #535353; color: var(--ink); box-shadow: 0 20px 70px #00000055; }
+html[data-theme="dark"] #search-dialog::backdrop { background: #13131399; }
+html[data-theme="dark"] .nav-backdrop { background: #13131388; }
 html[data-theme="dark"] :is(.search-field,.search-help,kbd) { border-color: var(--rule); }
 html[data-theme="dark"] .search-field { border-color: var(--control); background: var(--paper); }
 html[data-theme="dark"] .search-field input { color: var(--ink); }
-html[data-theme="dark"] .search-result mark { background: #3b4c55; color: #dae2e4; }
-html[data-theme="dark"] ::selection, html[data-theme="dark"] .hc-content ::selection { background: #42515b; color: #e0e6e2; }
+html[data-theme="dark"] .search-result mark { background: #494949; color: #e0e0e0; }
+html[data-theme="dark"] ::selection, html[data-theme="dark"] .hc-content ::selection { background: #4f4f4f; color: #e4e4e4; }
 html[data-theme="dark"] .document .hc-content {
-  --hc-color-text: #c9cfcb;
-  --hc-color-link: #a0b5d1;
-  --hc-code-background: #272b2b;
-  --c-done: #b8a6c6;
-  --c-success: #9cb99c;
-  --c-danger: #cf9d96;
-  --c-warning: #c6b28b;
-  --c-info: #a0b5d1;
-  --c-muted: #969f9b;
-  --c-text-default: #c9cfcb;
+  --hc-color-text: #c8c8c8;
+  --hc-color-link: #bdbdbd;
+  --hc-code-background: #1f1f1f;
+  --c-done: #acacac;
+  --c-success: #b1b1b1;
+  --c-danger: #a7a7a7;
+  --c-warning: #b3b3b3;
+  --c-info: #bdbdbd;
+  --c-muted: #9c9c9c;
+  --c-text-default: #c8c8c8;
 }
-html[data-theme="dark"] .document .hc-content :is(blockquote,.markdown-blockquote) { color: #afb8b2; border-color: #65736b; }
-html[data-theme="dark"] .document .hc-content :is(pre code,.chroma,.bg) { background: var(--surface); color: var(--ink); box-shadow: none; }
+html[data-theme="dark"] .document .hc-content :is(blockquote,.markdown-blockquote) { color: #b0b0b0; border-color: #6f6f6f; }
+html[data-theme="dark"] .document .hc-content pre code { background: var(--surface); color: var(--ink); box-shadow: none; }
 html[data-theme="dark"] .document .hc-content :is(th,td) { border-color: var(--rule); }
 html[data-theme="dark"] .document .hc-content th { background: var(--surface); }
 html[data-theme="dark"] .document .hc-content :is(.gh-alert.note,.gh-alert.tip,.gh-alert.warning,.gh-alert.important,.gh-alert.caution) { background: var(--surface); color: var(--ink); }
-html[data-theme="dark"] .document .hc-content .gh-alert.note { border-color: #7994af; }
-html[data-theme="dark"] .document .hc-content .gh-alert.tip { border-color: #839d83; }
-html[data-theme="dark"] .document .hc-content .gh-alert.warning { border-color: #a89770; }
-html[data-theme="dark"] .document .hc-content .gh-alert.important { border-color: #a18caf; }
-html[data-theme="dark"] .document .hc-content .gh-alert.caution { border-color: #ad827c; }
-html[data-theme="dark"] .document .hc-content :is(.hc-error,.wiki-editor-error) { color: #cf9d96; }
-html[data-theme="dark"] .document .hc-content .chroma * { color: inherit; background-color: transparent; }
-html[data-theme="dark"] .document .hc-content .chroma :is(.k,.kc,.kd,.kn,.kp,.kr,.kt) { color: #b7a8c7; }
-html[data-theme="dark"] .document .hc-content .chroma :is(.s,.sa,.sb,.sc,.dl,.sd,.s2,.se,.sh,.si,.sx,.sr,.s1,.ss) { color: #abc1a3; }
-html[data-theme="dark"] .document .hc-content .chroma :is(.m,.mb,.mf,.mh,.mi,.il,.mo,.no,.nv,.vc,.vg,.vi,.vm) { color: #cbb793; }
-html[data-theme="dark"] .document .hc-content .chroma :is(.nt,.nb,.nf,.fm,.nd,.ni) { color: #a0b5d1; }
-html[data-theme="dark"] .document .hc-content .chroma :is(.c,.ch,.cm,.c1,.cs,.cp,.cpf,.ln,.lnt) { color: #969f9b; }
-html[data-theme="dark"] .document .hc-content .chroma :is(.err,.gd) { color: #d3aaa4 !important; background: #3e2d2c; }
-html[data-theme="dark"] .document .hc-content .chroma .gi { color: #b0c5ac; background: #2b392e; }
-html[data-theme="dark"] .document .hc-content .chroma .hl { background: #323b39; }
+html[data-theme="dark"] .document .hc-content .gh-alert.note { border-color: #909090; }
+html[data-theme="dark"] .document .hc-content .gh-alert.tip { border-color: #969696; }
+html[data-theme="dark"] .document .hc-content .gh-alert.warning { border-color: #989898; }
+html[data-theme="dark"] .document .hc-content .gh-alert.important { border-color: #939393; }
+html[data-theme="dark"] .document .hc-content .gh-alert.caution { border-color: #8b8b8b; }
+html[data-theme="dark"] .document .hc-content :is(.hc-error,.wiki-editor-error) { color: #a7a7a7; }
 html[data-theme="dark"] :is(#wiki-admin,#wiki-login) :is(input,select,button) { background: var(--surface); color: var(--ink); border-color: var(--control); }
-html[data-theme="dark"] :is(#wiki-admin,#wiki-login) button:hover { background: var(--raised); border-color: #8a9790; }
+html[data-theme="dark"] :is(#wiki-admin,#wiki-login) button:hover { background: var(--raised); border-color: #949494; }
 html[data-theme="dark"] :is(#wiki-admin,#wiki-login) input::placeholder { color: var(--muted); }
 html[data-theme="dark"] #wiki-admin .wiki-users-table select { background: transparent; border-color: transparent; }
 html[data-theme="dark"] #wiki-admin .wiki-users-table select:hover { border-color: var(--rule); }
 html[data-theme="dark"] #wiki-admin .wiki-users-table button { color: var(--muted); background: transparent; border: 0; }
 html[data-theme="dark"] #wiki-admin .wiki-users-table button:hover { color: var(--ink); }
-html[data-theme="dark"] .wiki-editbar [data-editor-save] { background: #a0b5d1; color: #20282e; border-color: #a0b5d1; }
-html[data-theme="dark"] :is(.wiki-tree-delete:hover,.wiki-tree-delete:focus-visible,.wiki-tree-delete.is-confirming) { color: #d3aaa4; background: #3e2d2c; }
+html[data-theme="dark"] .wiki-editbar [data-editor-save] { background: #bdbdbd; color: #272727; border-color: #bdbdbd; }
+html[data-theme="dark"] :is(.wiki-tree-delete:hover,.wiki-tree-delete:focus-visible,.wiki-tree-delete.is-confirming) { color: #b2b2b2; background: #313131; }
 
 html[data-theme="dark"] :is(.wiki-new-fields input,.wiki-new-fields select,.wiki-link-form input,.wiki-tree-create input,.wiki-tree-create select,.wiki-rich-node textarea) { background: var(--paper); color: var(--ink); border-color: var(--control); }
 html[data-theme="dark"] :is(.wiki-new-fields input,.wiki-link-form input,.wiki-tree-create input,.search-field input)::placeholder { color: var(--muted); }
-html[data-theme="dark"] .wiki-editor-error { color: #cf9d96; }
+html[data-theme="dark"] .wiki-editor-error { color: #a7a7a7; }
 html[data-theme="dark"] .document .hc-content :is(details,hr) { border-color: var(--rule); }
 html[data-theme="dark"] body[data-hc-zoom-active] .medium-zoom-overlay { background: var(--paper) !important; }
 html[data-theme="dark"] .document .hc-content .mermaid :is(.node rect,.node circle,.node ellipse,.node polygon,.node path,.actor,.labelBox,.activation0,.activation1,.activation2) { fill: var(--surface) !important; stroke: var(--control) !important; }
@@ -81,3 +72,84 @@ html[data-theme="dark"] .document .hc-content .mermaid :is(.edgeLabel,.edgeLabel
 html[data-theme="dark"] .document .hc-content .mermaid .edgeLabel rect { fill: var(--paper) !important; }
 html[data-theme="dark"] .document .hc-content .mermaid :is(.flowchart-link,.actor-line,.messageLine0,.messageLine1,.loopLine,.relation,.transition) { stroke: var(--muted) !important; }
 html[data-theme="dark"] .document .hc-content .mermaid :is(.marker,#arrowhead path,#crosshead path) { fill: var(--muted) !important; stroke: var(--muted) !important; }
+html[data-theme="dark"] .document .hc-content .chroma :where(span) { color: inherit; background-color: transparent; }
+html[data-theme="dark"] .document .hc-content pre.chroma code { color: inherit; background: transparent; }
+html[data-theme="dark"] .document .hc-content .bg { color:#e6edf3;background-color:var(--surface); }
+html[data-theme="dark"] .document .hc-content .chroma { color:#e6edf3;background-color:var(--surface);-webkit-text-size-adjust:none; }
+html[data-theme="dark"] .document .hc-content .chroma .err { color:#f85149 !important }
+html[data-theme="dark"] .document .hc-content .chroma .lnlinks { outline:none;text-decoration:none;color:inherit }
+html[data-theme="dark"] .document .hc-content .chroma .lntd { vertical-align:top;padding:0;margin:0;border:0; }
+html[data-theme="dark"] .document .hc-content .chroma .lntable { border-spacing:0;padding:0;margin:0;border:0; }
+html[data-theme="dark"] .document .hc-content .chroma .hl { background-color:#6e7681 }
+html[data-theme="dark"] .document .hc-content .chroma .lnt { white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#737679 }
+html[data-theme="dark"] .document .hc-content .chroma .ln { white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#6e7681 }
+html[data-theme="dark"] .document .hc-content .chroma .line { display:flex; }
+html[data-theme="dark"] .document .hc-content .chroma .k { color:#ff7b72 }
+html[data-theme="dark"] .document .hc-content .chroma .kc { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .kd { color:#ff7b72 }
+html[data-theme="dark"] .document .hc-content .chroma .kn { color:#ff7b72 }
+html[data-theme="dark"] .document .hc-content .chroma .kp { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .kr { color:#ff7b72 }
+html[data-theme="dark"] .document .hc-content .chroma .kt { color:#ff7b72 }
+html[data-theme="dark"] .document .hc-content .chroma .nc { color:#f0883e;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .no { color:#79c0ff;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .nd { color:#d2a8ff;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .ni { color:#ffa657 }
+html[data-theme="dark"] .document .hc-content .chroma .ne { color:#f0883e;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .nl { color:#79c0ff;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .nn { color:#ff7b72 }
+html[data-theme="dark"] .document .hc-content .chroma .nx { color:#e6edf3 }
+html[data-theme="dark"] .document .hc-content .chroma .py { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .nt { color:#7ee787 }
+html[data-theme="dark"] .document .hc-content .chroma .nv { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .vc { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .vg { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .vi { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .vm { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .nf { color:#d2a8ff;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .fm { color:#d2a8ff;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .l { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .ld { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .s { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .sa { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .sb { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .sc { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .dl { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .sd { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .s2 { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .se { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .sh { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .si { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .sx { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .sr { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .s1 { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .ss { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .m { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .mb { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .mf { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .mh { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .mi { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .il { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .mo { color:#a5d6ff }
+html[data-theme="dark"] .document .hc-content .chroma .o { color:#ff7b72;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .ow { color:#ff7b72;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .or { color:#ff7b72;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .c { color:#8b949e;font-style:italic }
+html[data-theme="dark"] .document .hc-content .chroma .ch { color:#8b949e;font-style:italic }
+html[data-theme="dark"] .document .hc-content .chroma .cm { color:#8b949e;font-style:italic }
+html[data-theme="dark"] .document .hc-content .chroma .c1 { color:#8b949e;font-style:italic }
+html[data-theme="dark"] .document .hc-content .chroma .cs { color:#8b949e;font-weight:bold;font-style:italic }
+html[data-theme="dark"] .document .hc-content .chroma .cp { color:#8b949e;font-weight:bold;font-style:italic }
+html[data-theme="dark"] .document .hc-content .chroma .cpf { color:#8b949e;font-weight:bold;font-style:italic }
+html[data-theme="dark"] .document .hc-content .chroma .gd { color:#ffa198;background-color:#490202 }
+html[data-theme="dark"] .document .hc-content .chroma .ge { font-style:italic }
+html[data-theme="dark"] .document .hc-content .chroma .gr { color:#ffa198 }
+html[data-theme="dark"] .document .hc-content .chroma .gh { color:#79c0ff;font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .gi { color:#56d364;background-color:#0f5323 }
+html[data-theme="dark"] .document .hc-content .chroma .go { color:#8b949e }
+html[data-theme="dark"] .document .hc-content .chroma .gp { color:#8b949e }
+html[data-theme="dark"] .document .hc-content .chroma .gs { font-weight:bold }
+html[data-theme="dark"] .document .hc-content .chroma .gu { color:#79c0ff }
+html[data-theme="dark"] .document .hc-content .chroma .gt { color:#ff7b72 }
+html[data-theme="dark"] .document .hc-content .chroma .gl { text-decoration:underline }
+html[data-theme="dark"] .document .hc-content .chroma .w { color:#6e7681 }

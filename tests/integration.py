@@ -113,8 +113,10 @@ flowchart LR
                 assert path.startswith('/docs/'), f'Path escaped baseURL: {url}'
                 target = public / path.removeprefix('/docs/')
                 assert target.is_file() or (target / 'index.html').is_file(), f'Broken URL: {url}'
-    fonts = list((public / 'hugo-content/fonts').glob('*.woff2'))
-    assert len(fonts) == 5
+    fonts = list((public / 'hugo-content/fonts').rglob('*.woff2'))
+    assert len(fonts) >= 5
+    for family in ('cmu.serif-roman.', 'cmu.serif-bold.', 'cmu.typewriter-text-regular.', 'JetBrainsMono-Regular.'):
+        assert any(font.name.startswith(family) for font in fonts), family
     for font in fonts:
         assert hashlib.sha256(font.read_bytes()).hexdigest() in font.name
     assert 'wiki-editor' not in home

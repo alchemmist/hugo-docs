@@ -7,6 +7,7 @@ import { createWorkspace, batchPages } from './workspace.js';
 import { initializeTree } from './tree.js';
 import { createPublishedView } from './published-view.js';
 import { createPublicationState } from './publication-state.js';
+import { pasteCodeText } from './code-block.js';
 import { Editor } from '@tiptap/core';
 import { extensions, prepareMarkdown, sourceBody } from './markdown.js';
 
@@ -103,7 +104,7 @@ function initialize(session) {
       ]},
       {label:'Insert', actions:[
         {id:'link', label:t('Ссылка'), active:()=>editor.isActive('link'), run:()=>{linkForm.hidden=!linkForm.hidden;if(!linkForm.hidden)linkForm.querySelector('input').focus();}},
-        toggle('code','Код','toggleCodeBlock','codeBlock'),
+        toggle('code','Блок кода','toggleCodeBlock','codeBlock'),
         {id:'table',label:t('Таблица'),run:()=>editor.chain().focus().insertTable({rows:3,cols:2,withHeaderRow:true}).run()},
         {id:'media',label:t('Медиа'),run:()=>upload.click()}
       ]},
@@ -146,7 +147,7 @@ function initialize(session) {
       article.replaceChildren(); article.classList.add('wiki-rich-editor');
       editor = new Editor({onUpdate:()=>{ publicationState.reset(); stash(); }, element: article, extensions: extensions(), content: prepared.prepared, contentType:'markdown', editorProps:{
         attributes:{'aria-label':t('Текст заметки'),role:'textbox','aria-multiline':'true'},
-        handlePaste(view, event) { event.preventDefault(); const text = event.clipboardData?.getData('text/plain') || ''; view.dispatch(view.state.tr.insertText(text)); return true; },
+        handlePaste(view, event) { return pasteCodeText(editor,event); },
         handleDrop() { return true; }
       }});
       originalJSON = editor.getJSON(); baselineTitle = page.title;

@@ -5,7 +5,7 @@
   --blue: #173ea5;
   --rule: #e5e5e5;
   --sidebar-width: 264px;
-  --ui: "JetBrains Mono", ui-monospace, monospace;
+  --ui: "NerdFontsSymbols Nerd Font", "JetBrains Mono", ui-monospace, monospace;
   --prose: "NerdFontsSymbols Nerd Font", "Computer Modern Roman", serif;
   background: #fff;
   color: var(--ink);

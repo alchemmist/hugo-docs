@@ -1,4 +1,7 @@
 const en = {
+  "Блок кода": "Code block",
+  "Язык кода": "Code language",
+  "Обычный текст": "Plain text",
   "Моноширинный": "Monospace",
   "Медиа":"Media", "Файл должен быть меньше 8 МБ.":"The file must be smaller than 8 MB.", "Формула":"Formula", "Диаграмма":"Diagram", "Примечание":"Callout", "Сноска":"Footnote", "Задачи":"Tasks",
   "Опубликовать": "Publish",

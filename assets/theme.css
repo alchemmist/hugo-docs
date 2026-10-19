@@ -153,3 +153,4 @@ html[data-theme="dark"] .document .hc-content .chroma .gu { color:#79c0ff }
 html[data-theme="dark"] .document .hc-content .chroma .gt { color:#ff7b72 }
 html[data-theme="dark"] .document .hc-content .chroma .gl { text-decoration:underline }
 html[data-theme="dark"] .document .hc-content .chroma .w { color:#6e7681 }
+html[data-theme="dark"] .wiki-code-language input { border-color: var(--control); background: var(--surface); }

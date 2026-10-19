@@ -4,3 +4,5 @@ github.com/alchemmist/hugo-content v0.1.2 h1:bW4F+3mOz2UjyT29LrUcOL+DHG3yo8oIAFG
 github.com/alchemmist/hugo-content v0.1.2/go.mod h1:Q6XuI8NBumE+LLTj3q9ooZ4RADXzuvIdN4t4s9hUdVE=
 github.com/alchemmist/hugo-content v0.1.3 h1:qMPBhgyvH8BVQvyrPfjk6ud8wXsU9yJDd/cPmd5ShJ0=
 github.com/alchemmist/hugo-content v0.1.3/go.mod h1:Q6XuI8NBumE+LLTj3q9ooZ4RADXzuvIdN4t4s9hUdVE=
+github.com/alchemmist/hugo-content v0.1.4-0.20261019125544-8dee779ecebd h1:zdJ0H2q0I5xYx4WRpfHV2oMJBIaABwT2snH35LBrVK8=
+github.com/alchemmist/hugo-content v0.1.4-0.20261019125544-8dee779ecebd/go.mod h1:Q6XuI8NBumE+LLTj3q9ooZ4RADXzuvIdN4t4s9hUdVE=

@@ -11,5 +11,5 @@
 }
 {{ end }}
 {{ end }}
-:root { --ui: {{ .monoFamily | jsonify }}, monospace; --hc-font-mono: "NerdFontsSymbols Nerd Font", {{ .monoFamily | jsonify }}, monospace; }
+:root { --ui: "NerdFontsSymbols Nerd Font", {{ .monoFamily | jsonify }}, monospace; --hc-font-mono: "NerdFontsSymbols Nerd Font", {{ .monoFamily | jsonify }}, monospace; }
 {{ end }}

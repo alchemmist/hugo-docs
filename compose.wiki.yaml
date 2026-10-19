@@ -1,6 +1,6 @@
 services:
   wiki:
-    image: ${WIKI_IMAGE:-ghcr.io/alchemmist/hugo-docs-wiki:0.4.0}
+    image: ${WIKI_IMAGE:-ghcr.io/alchemmist/hugo-docs-wiki:0.4.1}
     build:
       context: .
       dockerfile: runtime/Dockerfile

@@ -51,6 +51,8 @@ jobs:
           load: true
           tags: wiki:test
       - run: python scripts/check-runtime-container.py --image wiki:test
+      - name: Verify Git process lifecycle with Python as container PID 1
+        run: docker run --rm --entrypoint python -v "$PWD/runtime:/source:ro" wiki:test /source/tests/test_git_process_lifecycle.py -v
 
   release:
     timeout-minutes: 20

@@ -167,6 +167,12 @@ class EditorTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
         self.assertEqual(response.json()['commit'], run(editor.WORK, 'rev-parse', 'origin/main'))
 
+    def test_git_maintenance_does_not_detach(self):
+        with patch.object(editor.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, '', '')) as run_git:
+            editor.git('fetch', 'origin')
+        command = run_git.call_args.args[0]
+        self.assertEqual(command, ['git', '-c', 'maintenance.autoDetach=false', '-c', 'gc.autoDetach=false', 'fetch', 'origin'])
+
     def test_git_timeout_is_runtime_error(self):
         with patch.object(editor.subprocess, 'run', side_effect=subprocess.TimeoutExpired('git', 90)):
             with self.assertRaises(RuntimeError):

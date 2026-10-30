@@ -50,7 +50,10 @@ def git(*args, cwd=None):
         hosts = os.environ['GIT_KNOWN_HOSTS']
         env['GIT_SSH_COMMAND'] = 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i ' + shlex.quote(key) + ' -o UserKnownHostsFile=' + shlex.quote(hosts)
     try:
-        result = subprocess.run(['git', *args], cwd=cwd or WORK, env=env, capture_output=True, text=True, timeout=90)
+        # Git fetch starts auto-maintenance even when there is nothing to fetch.
+        # Detached maintenance becomes an orphan of PID 1 in containers.
+        # Keep maintenance synchronous so subprocess.run reaps the full operation.
+        result = subprocess.run(['git', '-c', 'maintenance.autoDetach=false', '-c', 'gc.autoDetach=false', *args], cwd=cwd or WORK, env=env, capture_output=True, text=True, timeout=90)
     except subprocess.TimeoutExpired as error:
         raise RuntimeError('Git operation timed out') from error
     if result.returncode:

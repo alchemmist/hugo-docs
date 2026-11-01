@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Match blog heading fragment marks: Computer Modern Typewriter, full-size hashes, opacity and hover treatment independent of the configured UI/code font.
+- Keep native smooth fragment navigation and avoid doubled scroll offsets on desktop and mobile.
+- Compact the sidebar brand/search spacing and extend the scrolling tree and its fade to the viewport's bottom edge, including the mobile drawer.
+- Add reusable Playwright reading-layout checks for heading marks, fragment navigation and viewport-edge sidebar placement.
+
 ## 0.2.3
 
 - Replace the account modal with a full `/admin` page and make `/login` use the same site typography and language.

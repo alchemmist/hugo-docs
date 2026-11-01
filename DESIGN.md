@@ -11,13 +11,21 @@ the blog for navigation, controls and code. Long-form content uses Computer Mode
 
 A 264px left rail contains the existing blog logo, search, and a nested page tree.
 The brand contains only the round logo and alchemmist, centered as one group
-within the desktop sidebar. There is no sidebar footer.
+within the desktop sidebar. There is no sidebar footer. The desktop sidebar starts
+16px from the top and reaches the viewport's bottom edge. Search has a compact
+16px gap below the brand. The navigation mask fades at the actual bottom edge,
+without a reserved white footer; the mobile drawer also reaches that edge.
 The reading column is capped at 680px. A quiet 176px right rail contains the current
 page outline. On wide screens the reading axis is centered; on narrow screens the
 outline collapses into the page and navigation opens as a mobile drawer.
 
 Titles are serif, 30px desktop and 26px mobile. Prose matches the live blog in both languages: Computer Modern Roman, 18px desktop / 16px mobile, normal line height,
 and black text.
+Heading fragment marks match the blog: Computer Modern Typewriter (independent
+of the configured navigation/code font), 1.4em, weight 300, ink at 0.3 opacity.
+Hover uses 0.7 opacity, scale 1.1 and the blog's subtle blue text glow. Keep the
+native fragment links and smooth scrolling; desktop targets align to the viewport
+top, while mobile uses one 80px offset to clear its sticky header, not two offsets.
 Controls are 13px monospace. The sidebar follows the supplied Diplodoc reference:
 compact 32px rows, disclosure arrows before labels, and 20px nested indentation.
 Sections start collapsed except the current page's ancestor branch; explicit user

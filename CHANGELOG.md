@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Separate interface, prose and code typography: custom UI fonts no longer replace Computer Modern Typewriter in inline/fenced code.
+- Restore the blog's shared hugo-content prose sizing and code metrics, token line heights, padding and backgrounds on desktop and mobile.
+- Add custom-UI-font regression coverage and Playwright checks for prose, inline code and syntax-highlighted blocks at five viewport widths.
+
 - Match blog heading fragment marks: Computer Modern Typewriter, full-size hashes, opacity and hover treatment independent of the configured UI/code font.
 - Keep native smooth fragment navigation and avoid doubled scroll offsets on desktop and mobile.
 - Compact the sidebar brand/search spacing and extend the scrolling tree and its fade to the viewport's bottom edge, including the mobile drawer.

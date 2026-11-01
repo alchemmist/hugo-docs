@@ -74,7 +74,7 @@ For `/docs/` hosting, use `WIKI_URL=https://docs.example.org/docs` and preserve 
 
 Branding, language and rendering remain ordinary Hugo settings in `runtime-site/hugo.toml`. Change that template and rebuild the image for a customized installation. Keep executable templates and dependencies in the image; the runtime-managed content belongs on the volume. Set `defaultContentLanguage` to `en` or `ru` for the corresponding theme/editor/account interface. Login and account pages use that same site language. Runtime editing supports one content language per instance; normal static Hugo use is not restricted to that model.
 
-Custom monospace fonts apply consistently to navigation, controls, code and account pages. Supply local WOFF2 files through the site or the chart's `staticBinaryFiles`, then configure:
+Custom interface fonts apply consistently to navigation, controls, outlines, search and account pages. They do not replace the article's code font. Supply local WOFF2 files through the site or the chart's `staticBinaryFiles`, then configure:
 
 ```toml
 [params.content.typography]
@@ -85,7 +85,7 @@ monoItalic = 'fonts/my-mono.italic.woff2'
 monoBoldItalic = 'fonts/my-mono.bold-italic.woff2'
 ```
 
-Use content-hashed font filenames for immutable caching. The regular face is preloaded and account pages reuse the wiki's exact asset URLs. Serif article text and headings retain their existing typography.
+Use content-hashed font filenames for immutable caching. The regular face is preloaded and account pages reuse the wiki's exact asset URLs. Article text uses Computer Modern Roman; inline and fenced code use Computer Modern Typewriter. Prose and code sizing, spacing and code backgrounds follow the blog's shared `hugo-content` styles, separately from the configured interface font.
 
 ## Editing and publication
 

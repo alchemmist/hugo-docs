@@ -43,6 +43,8 @@ def check_site(site, language):
     run(sys.executable, str(ROOT / 'scripts/new_site.py'), str(site), '--title', 'Test & Docs', '--language', language, cwd=ROOT)
     config = site / 'hugo.toml'
     config.write_text(config.read_text().replace('http://localhost:1320/', 'https://example.test/docs/').replace("logo = ''", "logo = 'custom.svg'").replace("footer = ''", "footer = 'Test footer'").replace('noindex = true', f'noindex = {str(language == "ru").lower()}'))
+    # A custom interface face must not leak into article code or prose.
+    config.write_text(config.read_text() + '\n[params.content.typography]\nmonoFamily = "Test UI"\n')
     module = site / 'go.mod'
     if REVISION:
         run('go', 'mod', 'edit', '-droprequire=github.com/alchemmist/hugo-docs', cwd=site)
@@ -60,6 +62,12 @@ weight: 10
 ## Retry budget
 
 English and русский searchable content. $a^2 + b^2 = c^2$.
+
+Inline `print(1)` and a fenced program:
+
+```python
+print(1)
+```
 
 ```mermaid
 flowchart LR
@@ -120,6 +128,14 @@ flowchart LR
     for font in fonts:
         assert hashlib.sha256(font.read_bytes()).hexdigest() in font.name
     assert 'wiki-editor' not in home
+    typography = next(public.glob('wiki-typography*.css')).read_text()
+    assert 'test ui' in typography.lower() and '--ui:' in typography
+    assert '--hc-font-mono' not in typography, 'UI font leaked into content monospace'
+    docs_css = next(public.glob('docs.min.*.css')).read_text().lower()
+    assert '--hc-font-size:18px' in docs_css
+    assert '--hc-font-code:' in docs_css and 'computer modern typewriter' in docs_css
+    assert '--hc-font-ui:var(--ui)' in docs_css
+    assert 'language-python' in page and '<code>print(1)</code>' in page
     for path in ['hugo-content/lib/mermaid.js', 'hugo-content/lib/mathjax/tex-svg.js', 'hugo-content/lib/zoom.js']:
         assert (public / path).is_file(), path
     assert 'class=mermaid' in page or 'class="mermaid"' in page

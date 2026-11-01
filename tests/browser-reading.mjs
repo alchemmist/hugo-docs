@@ -57,3 +57,46 @@ export async function verifyReadingChrome(page, {origin, path}) {
   }
   return {normal, hover, fragment};
 }
+
+// Use a specimen containing paragraphs, inline code and highlighted fenced code.
+// These are the blog's hugo-content metrics; UI typography is a separate concern.
+export async function verifyContentTypography(page, {origin, path, interfaceFamily}) {
+  const url = new URL(path, origin);
+  assert.ok(['localhost', '127.0.0.1', '[::1]'].includes(url.hostname));
+  for (const width of [1440, 700, 650, 390, 320]) {
+    await page.setViewportSize({width, height: 900});
+    await page.goto(url.href);
+    await page.evaluate(() => document.fonts.ready);
+    const metrics = await page.evaluate(() => {
+      const get = (selector) => {
+        const css = getComputedStyle(document.querySelector(selector));
+        return {font: css.fontFamily.toLowerCase(), size: parseFloat(css.fontSize),
+          weight: css.fontWeight, line: css.lineHeight, padding: css.padding,
+          margin: css.margin, background: css.backgroundColor};
+      };
+      return {prose: get('.hc-content p'), inline: get('.hc-content p code'),
+        code: get('.hc-content pre code'), token: get('.hc-content pre code span'),
+        ui: get('.sidebar'), overflow: document.documentElement.scrollWidth > innerWidth};
+    });
+    const mobile = width <= 650;
+    assert.ok(metrics.prose.font.includes('computer modern roman'));
+    assert.equal(metrics.prose.size, mobile ? 16 : 18);
+    assert.equal(metrics.prose.weight, '400');
+    assert.equal(metrics.prose.line, 'normal');
+    assert.equal(metrics.prose.margin, mobile ? '8px 0px' : '9px 0px');
+    for (const key of ['inline', 'code', 'token']) {
+      assert.ok(metrics[key].font.includes('computer modern typewriter'), `${key}: ${metrics[key].font}`);
+      assert.ok(!metrics[key].font.includes('couriercyr'));
+    }
+    assert.equal(metrics.inline.size, mobile ? 14.4 : 16.2);
+    assert.equal(metrics.inline.background, 'rgba(0, 0, 0, 0.04)');
+    assert.equal(metrics.code.size, mobile ? 13.6 : 17.28);
+    assert.equal(metrics.token.size, metrics.code.size);
+    assert.equal(metrics.code.line, mobile ? '16.32px' : '20.736px');
+    assert.equal(metrics.token.line, metrics.code.line);
+    assert.equal(metrics.code.padding, mobile ? '12.8px' : '16px');
+    assert.equal(metrics.code.background, 'rgba(0, 0, 0, 0.02)');
+    if (interfaceFamily) assert.ok(metrics.ui.font.includes(interfaceFamily.toLowerCase()));
+    assert.equal(metrics.overflow, false);
+  }
+}

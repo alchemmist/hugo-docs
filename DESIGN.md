@@ -7,7 +7,12 @@ Pure white, ink #171717, link blue #173ea5, secondary ink #666666, dividers #e5e
 No cards, gradients, decorative shadows or dashboard statistics. Navigation uses
 the configured local monospace family, with JetBrains Mono as the generic fallback.
 Socrat uses the exact CourierCyr regular, bold, italic and bold italic faces from
-the blog for navigation, controls and code. Long-form content uses Computer Modern.
+the blog for navigation and controls only. Long-form content uses Computer Modern
+Roman. Inline and fenced code use Computer Modern Typewriter, independently of
+the interface font. Reuse hugo-content's blog metrics: prose 18px desktop / 16px
+at 650px and below; code 0.96em desktop / 0.85em mobile, line height 1.2, including
+syntax tokens. Keep the module's inline code padding and backgrounds and fenced
+code padding, rather than introducing a second documentation-specific code style.
 
 A 264px left rail contains the existing blog logo, search, and a nested page tree.
 The brand contains only the round logo and alchemmist, centered as one group

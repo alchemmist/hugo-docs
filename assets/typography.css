@@ -11,5 +11,6 @@
 }
 {{ end }}
 {{ end }}
-:root { --ui: "NerdFontsSymbols Nerd Font", {{ .monoFamily | jsonify }}, monospace; --hc-font-mono: "NerdFontsSymbols Nerd Font", {{ .monoFamily | jsonify }}, monospace; }
+/* A custom interface face must not replace the article's typewriter face. */
+:root { --ui: "NerdFontsSymbols Nerd Font", {{ .monoFamily | jsonify }}, monospace; }
 {{ end }}

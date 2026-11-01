@@ -129,6 +129,8 @@ class AuthStore:
                 raise RuntimeError('Unsupported account database version')
         os.chmod(self.path, 0o600)
         self.dummy_hash = PASSWORD_HASHER.hash(secrets.token_urlsafe(32))
+        from oidc import configure_store
+        configure_store(self)
 
     @contextmanager
     def connect(self):
@@ -196,7 +198,7 @@ class AuthStore:
                 valid = PASSWORD_HASHER.verify(row['password'] if row else self.dummy_hash, password)
             except VerificationError:
                 valid = False
-            if not valid or not row or row['disabled']:
+            if not valid or not row or row['disabled'] or (self.oidc_enabled and row['id'] not in self.local_owners):
                 raise HTTPException(401, 'Invalid credentials')
             if PASSWORD_HASHER.check_needs_rehash(row['password']):
                 db.execute('UPDATE users SET password=? WHERE id=?', (PASSWORD_HASHER.hash(password), row['id']))
@@ -217,6 +219,9 @@ class AuthStore:
             row = db.execute('SELECT users.*, sessions.csrf FROM sessions JOIN users ON users.id=sessions.user_id '
                              'WHERE sessions.token=? AND sessions.expires>? AND users.disabled=0',
                              (self.digest(token), time.time())).fetchone()
+            if row and self.oidc_enabled and row['id'] not in self.local_owners:
+                if not db.execute('SELECT 1 FROM oidc_sessions WHERE token=?', (self.digest(token),)).fetchone():
+                    return None
             return {'user': self.public_user(row, db), 'csrf_token': row['csrf']} if row else None
 
     def logout(self, token):
@@ -421,6 +426,8 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
     async def login_page(request: Request):
         if request.state.auth:
             return RedirectResponse(prefix + '/admin', status_code=303, headers={'Cache-Control': 'no-store'})
+        if store.oidc_enabled and request.query_params.get('local') != '1':
+            return RedirectResponse(prefix+'/api/auth/oidc/login',status_code=303,headers={'Cache-Control':'no-store'})
         language = pages.language(request.headers.get('accept-language', ''))
         return pages.render('login', language, prefix)
 
@@ -524,4 +531,7 @@ def install_auth(app, *, origin, data_dir, base_path='', public=True, bootstrap_
         store.validate('user', body.get('password'), 'reader')
         return store.update_user(user_id, password=body['password'])
 
+    if store.oidc_enabled:
+        from oidc import install_oidc
+        install_oidc(app,store,allowed_origin,prefix,cookie_path,session_seconds)
     return store

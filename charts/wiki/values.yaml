@@ -39,3 +39,6 @@ resources:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Optional native OIDC environment Secret; never place client secrets in values.
+oidcSecret: ""

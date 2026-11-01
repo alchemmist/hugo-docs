@@ -38,6 +38,11 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          {{- if .Values.oidcSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.oidcSecret | quote }}
+          {{- end }}
           env:
             - name: WIKI_CONFIG
               value: /config/wiki.yaml

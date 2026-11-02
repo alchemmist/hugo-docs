@@ -105,8 +105,27 @@ main:focus { outline: none; }
   --hc-font-ui: var(--ui);
   --hc-line-height: normal;
   --hc-color-text: #000;
-  --hc-color-link: var(--blue);
+  --hc-color-link: #000;
   text-align: left;
+}
+.document .hc-content a:not(.link) {
+  color: var(--hc-color-link);
+  font-family: var(--prose);
+  font-weight: 400;
+  font-style: normal;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+}
+.document .hc-content a:not(.link) :is(strong, b) {
+  font-weight: inherit;
+  font-family: inherit;
+}
+.document .hc-content a:not(.link):hover {
+  color: var(--hc-color-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
 }
 .document .hc-content h1 { font-size: 23px; }
 .document .hc-content :is(h1,h2,h3,h4,h5,h6) * { font-size: inherit; }

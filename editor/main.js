@@ -114,6 +114,7 @@ function initialize(session) {
     ]});
     toolbar = formatting.element;
     const uploadButton = formatting.buttons.get('media');
+    if (root.dataset.uploadsDisabled === 'true') uploadButton.hidden = true;
     upload.addEventListener('change',async()=>{ const file=upload.files[0];if(!file || busy)return;uploadButton.disabled=true;try{if(file.size>8*1024*1024)throw new Error(t('Файл должен быть меньше 8 МБ.'));const content=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file);});const result=await api('/uploads',{name:file.name,content});workspace.addUpload(result.id);editor.chain().focus().setImage({src:result.url,alt:file.name}).run();stash();}catch(error){message(error.message,true);}finally{uploadButton.disabled=false;upload.value='';}});
     toolbar.append(upload);
     article.before(toolbar);
@@ -248,7 +249,7 @@ function initialize(session) {
       const hydrationGeneration = generation;
       return view.hydratePage({api,path,page,canApply:()=>!busy && !editor && generation===hydrationGeneration});
     }).catch(error=>message(error.message,true));
-    initializeTree({api, workspace, begin:()=>{
+    if (root.dataset.contentOnly !== 'true') initializeTree({api, workspace, begin:()=>{
       if (!stash()) return false;
       workspace.start(); actions.hidden=true; editbar.hidden=false; document.body.classList.add('wiki-editing'); return true;
     }, dirty:()=>busy, currentPath:()=>workspace.virtualPath(path), message, changed:async()=>{draftCount();if(fields?.querySelector('input'))fields.querySelector('input').disabled=workspace.slugLocked(path);structure?.render();}, openPage:async seed=>{

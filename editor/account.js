@@ -10,6 +10,6 @@ export async function mountAccount(root) {
   link.className = 'wiki-account-toggle';
   link.textContent = session.user?.username || label;
   link.href = base + (session.user ? 'admin' : 'login');
-  document.body.append(link);
+  if (root.dataset.accountHidden !== 'true') document.body.append(link);
   return session;
 }

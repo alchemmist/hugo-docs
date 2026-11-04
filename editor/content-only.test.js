@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 
 test('content-only host keeps navigation and account UI owned by its application',async()=>{
-  const dom=new JSDOM('<html lang="en"><body><h1 id="page-title">Page</h1><div class="document"><article class="hc-content"><p>Text</p></article></div><div id="wiki-editor" data-content-only="true" data-uploads-disabled="true" data-account-hidden="true" data-path="page.md" data-base-path="/" data-api-base="/api/editor"><div class="wiki-editor-actions" hidden><button data-editor-open>Edit</button></div><div class="wiki-editbar" hidden><button data-editor-cancel>Cancel</button><button data-editor-save>Publish</button></div><p role="alert" hidden></p></div></body></html>',{url:'http://localhost/'});
+  const dom=new JSDOM('<html lang="en"><body><h1 id="page-title">Page</h1><div class="document"><article class="hc-content"><aside id="host-controls">Host controls</aside><div class="host-prose"><p>Text</p></div></article></div><div id="wiki-editor" data-content-selector=".host-prose" data-content-only="true" data-uploads-disabled="true" data-account-hidden="true" data-path="page.md" data-base-path="/" data-api-base="/api/editor"><div class="wiki-editor-actions" hidden><button data-editor-open>Edit</button></div><div class="wiki-editbar" hidden><button data-editor-cancel>Cancel</button><button data-editor-save>Publish</button></div><p role="alert" hidden></p></div></body></html>',{url:'http://localhost/'});
   for(const key of ['window','document','HTMLElement','Element','Node','MutationObserver','DOMParser','sessionStorage','location','history','getComputedStyle'])globalThis[key]=dom.window[key];
   Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configurable:true});
   globalThis.matchMedia=()=>({matches:false,addEventListener(){}});
@@ -17,6 +17,7 @@ test('content-only host keeps navigation and account UI owned by its application
   assert.equal(document.querySelector('.wiki-editbar').hidden,false);
   assert.equal(document.querySelector('[data-format="media"]').hidden,true);
   assert.equal(document.querySelector('.wiki-account-toggle'),null);
+  assert.equal(document.querySelector('#host-controls').textContent,'Host controls');
   assert.equal(document.querySelector('.wiki-tree-root'),null);
   assert.equal(document.querySelector('[data-editor-save]').textContent,'Publish');
   assert.equal(document.querySelector('[data-editor-save]').disabled,false);

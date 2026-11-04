@@ -17,7 +17,7 @@ function initialize(session) {
   const basePath = root.dataset.basePath || "/";
   configureRichContent({basePath});
   const heading = document.getElementById('page-title');
-  const article = document.querySelector('.document .hc-content');
+  const article = document.querySelector(root.dataset.contentSelector || '.document .hc-content');
   if (!heading || !article) return;
   const status = root.querySelector('[role="alert"]');
   heading.after(status);
